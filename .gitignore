@@ -1,0 +1,15 @@
+# Python / Virtual Environment
+venv/
+*.pyc
+__pycache__/
+*.sq3
+
+# Node / Frontend Dependencies
+node_modules/
+dist/
+.env
+
+# OS / Editor Files
+.DS_Store
+.vscode/
+.idea/
