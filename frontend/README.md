@@ -19,3 +19,4 @@ If you are developing a production application, we recommend using TypeScript wi
 
 librerias intaladas:
 - npm install react-router-dom lucide-react
+- npm install recharts

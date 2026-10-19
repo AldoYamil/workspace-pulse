@@ -1,10 +1,12 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { 
-  ShieldAlert, 
-  ClipboardList, 
+import {
+  ShieldAlert,
+  ClipboardList,
   Bell,
   ChevronDown,
-  Activity
+  Activity,
+  ClipboardCheck,
+  FileSearch,
 } from 'lucide-react';
 
 export default function DashboardLayout() {
@@ -15,6 +17,9 @@ export default function DashboardLayout() {
     { name: 'Riesgos Psicosociales', path: '/riesgos', icon: ShieldAlert },
     { name: 'Cuestionario activo', path: '/cuestionario', icon: ClipboardList },
     { name: 'Configuración de Alertas', path: '/alertas', icon: Bell },
+    { name: 'Planes de acción', path: '/planes-accion', icon: ClipboardCheck },
+    { name: 'Reportes de auditoría', path: '/reportes-auditoria', icon: FileSearch,
+},
   ];
 
   return (

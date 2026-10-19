@@ -4,6 +4,8 @@ import Login from './pages/Login';
 import CuestionarioActivo from './pages/CuestionarioActivo';
 import PanelRiesgos from './pages/PanelRiesgos';
 import ConfiguracionAlertas from './pages/ConfiguracionAlertas';
+import PlanesAccion from './pages/PlanesAccion'
+import ReportesAuditoria from './pages/ReportesAuditoria';
 
 export default function App() {
   return (
@@ -20,6 +22,8 @@ export default function App() {
           <Route path="/cuestionario" element={<CuestionarioActivo />} />
           <Route path="/riesgos" element={<PanelRiesgos />} />
           <Route path="/alertas" element={<ConfiguracionAlertas />} />
+          <Route path="/planes-accion" element={<PlanesAccion />} />
+          <Route path="/reportes-auditoria" element={<ReportesAuditoria />} />
         </Route>
       </Routes>
     </BrowserRouter>
