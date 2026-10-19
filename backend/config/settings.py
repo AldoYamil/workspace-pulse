@@ -84,8 +84,8 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'workspace_db',
-        'USER': 'generic_user',
-        'PASSWORD': 'generic_password',
+        'USER': 'user_demo',
+        'PASSWORD': 'password_demo',
         'HOST': 'localhost',
         'PORT': '5432',
     }
