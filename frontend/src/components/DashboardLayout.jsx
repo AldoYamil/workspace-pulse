@@ -22,7 +22,7 @@ export default function DashboardLayout() {
   const menuItems = [
     { name: 'Dashboard Ejecutivo', path: '/admin/dashboard', icon: LayoutDashboard },
     { name: 'Gestión Organizacional', path: '/admin/organizacion', icon: Building2 },
-    { name: 'Asignar Encuestas', path: '/admin/asignar', icon: Users },
+    { name: 'Encuestas Aplicadas', path: '/admin/encuestas-aplicadas', icon: Users },
     { name: 'Reportes NOM-035', path: '/admin/reportes', icon: FileText },
   ];
 

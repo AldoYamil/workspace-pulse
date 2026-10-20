@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import DashboardLayout from './components/DashboardLayout'; // ← Ruta corregida
 import AdminDashboard from './pages/AdminDashboard';
 import OrgManagement from './pages/OrgManagement';
+import AppliedSurveys from './pages/AppliedSurveys';
 import Login from './pages/Login';
 
 function App() {
@@ -17,6 +18,7 @@ function App() {
           <Route index element={<Navigate to="/admin/dashboard" replace />} />
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="organizacion" element={<OrgManagement />} />
+          <Route path="encuestas-aplicadas" element={<AppliedSurveys />} />
         </Route>
 
         {/* REDIRECCIÓN POR DEFECTO */}
