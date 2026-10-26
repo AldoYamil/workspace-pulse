@@ -28,7 +28,7 @@ class ListAreaApiView(APIView):
 class DetailAreaApiView(APIView):
     def get(self, request, id):
         area = Area.objects.get(pk = id)
-        data = area_serializer.DetailPuestoSerializer(area).data
+        data = area_serializer.DetailAreaSerializerByEmpresa(area).data
         return Response (data)   
 
 ##UPDATE
