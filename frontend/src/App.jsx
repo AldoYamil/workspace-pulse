@@ -1,42 +1,31 @@
-import { useEffect, useState } from 'react';
-import api from './api/axios';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import DashboardLayout from './components/DashboardLayout';
+import Login from './pages/Login';
+import CuestionarioActivo from './pages/CuestionarioActivo';
+import PanelRiesgos from './pages/PanelRiesgos';
+import ConfiguracionAlertas from './pages/ConfiguracionAlertas';
+import PlanesAccion from './pages/PlanesAccion'
+import ReportesAuditoria from './pages/ReportesAuditoria';
 
-function App() {
-  const [mensaje, setMensaje] = useState('Cargando conexión...');
-  const [estado, setEstado] = useState(null);
-
-  useEffect(() => {
-    // Petición al endpoint de Django
-    api.get('/health/')
-      .then((response) => {
-        setMensaje(response.data.message);
-        setEstado('conectado');
-      })
-      .catch((error) => {
-        console.error('Error al conectar con el backend:', error);
-        setMensaje('No se pudo conectar con el servidor Backend.');
-        setEstado('error');
-      });
-  }, []);
-
+export default function App() {
   return (
-    <div style={{ textAlign: 'center', marginTop: '50px', fontFamily: 'Arial' }}>
-      <h1>WorkSpace Pulse</h1>
-      <p>Prueba de integración Backend & Frontend</p>
-      
-      <div style={{
-        display: 'inline-block',
-        padding: '15px 25px',
-        borderRadius: '8px',
-        backgroundColor: estado === 'conectado' ? '#e6fffa' : '#fff5f5',
-        color: estado === 'conectado' ? '#234e52' : '#9b2c2c',
-        border: `1px solid ${estado === 'conectado' ? '#319795' : '#e53e3e'}`
-      }}>
-        <strong>Respuesta del Servidor:</strong>
-        <p>{mensaje}</p>
-      </div>
-    </div>
+    <BrowserRouter>
+      <Routes>
+        {/* Ruta pública de Login */}
+        <Route path="/login" element={<Login />} />
+
+        {/* Rutas con menú lateral */}
+        <Route element={<DashboardLayout />}>
+          <Route path="/" element={<Navigate to="/login" replace />} />
+          
+          {/* Módulos activos */}
+          <Route path="/cuestionario" element={<CuestionarioActivo />} />
+          <Route path="/riesgos" element={<PanelRiesgos />} />
+          <Route path="/alertas" element={<ConfiguracionAlertas />} />
+          <Route path="/planes-accion" element={<PlanesAccion />} />
+          <Route path="/reportes-auditoria" element={<ReportesAuditoria />} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
   );
 }
-
-export default App;
