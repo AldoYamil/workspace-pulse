@@ -23,7 +23,6 @@ export default function DashboardLayout() {
     { name: 'Dashboard Ejecutivo', path: '/admin/dashboard', icon: LayoutDashboard },
     { name: 'Gestión Organizacional', path: '/admin/organizacion', icon: Building2 },
     { name: 'Encuestas Aplicadas', path: '/admin/encuestas-aplicadas', icon: Users },
-    { name: 'Reportes NOM-035', path: '/admin/reportes', icon: FileText },
   ];
 
   return (

@@ -29,14 +29,30 @@ const riskDistribution = [
   { name: 'Alto', value: 12, color: '#EF4444' },
 ];
 
+// --- FUNCIONES DE EXPORTACIÓN ---
+const exportToCSV = (data, filename) => {
+  const headers = Object.keys(data[0]).join(',');
+  const rows = data.map(obj => Object.values(obj).join(','));
+  const csvContent = [headers, ...rows].join('\n');
+  
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  const url = URL.createObjectURL(blob);
+  link.setAttribute('href', url);
+  link.setAttribute('download', `${filename}.csv`);
+  link.style.visibility = 'hidden';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
+
 export default function AdminDashboard() {
   const [filterSede, setFilterSede] = useState('Todas');
 
   return (
-    // CONTENIDO ADAPTADO AL FONDO AZUL DEL LAYOUT
     <div className="space-y-6 animate-in fade-in duration-300">
       
-      {/* FILTRO GLOBAL CON EFECTO GLASSMORPHISM */}
+      {/* FILTRO GLOBAL */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white/10 backdrop-blur-md p-4 rounded-xl border border-white/10 shadow-lg">
         <h2 className="text-lg font-bold text-white">Salud Organizacional en Tiempo Real</h2>
         <div className="relative w-full sm:w-auto">
@@ -54,7 +70,46 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* KPI CARDS (Blancas para contraste máximo sobre azul) */}
+      {/* GESTIÓN RÁPIDA CON TÍTULO */}
+      <div>
+        <h3 className="text-lg font-bold text-white mb-3 px-1">Gestión Rápida</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <button className="bg-white p-4 rounded-xl shadow-lg border border-white/10 hover:border-[#1E3A5F] hover:shadow-xl transition-all flex items-center gap-3 group text-left">
+            <div className="w-10 h-10 bg-blue-50 text-[#1E3A5F] rounded-lg flex items-center justify-center group-hover:bg-[#1E3A5F] group-hover:text-white transition-colors">
+              <Users size={20}/>
+            </div>
+            <div>
+              <p className="font-bold text-slate-800 text-sm">Asignar Encuestas</p>
+              <p className="text-xs text-slate-500">NOM-035 o Clima Laboral</p>
+            </div>
+          </button>
+
+          <button className="bg-white p-4 rounded-xl shadow-lg border border-white/10 hover:border-[#1E3A5F] hover:shadow-xl transition-all flex items-center gap-3 group text-left">
+            <div className="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-lg flex items-center justify-center group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+              <FileText size={20}/>
+            </div>
+            <div>
+              <p className="font-bold text-slate-800 text-sm">Generar Reporte Oficial</p>
+              <p className="text-xs text-slate-500">Evidencia para auditoría STPS</p>
+            </div>
+          </button>
+
+          <button className="bg-[#1E3A5F] p-4 rounded-xl shadow-lg hover:bg-[#172A47] transition-all flex items-center gap-3 text-white border border-white/10">
+            <div className="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center">
+              <TrendingUp size={20}/>
+            </div>
+            <div>
+              <p className="font-bold text-sm">Ver Recomendaciones IA</p>
+              <p className="text-xs text-blue-200">Plan de acción sugerido</p>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      {/* SEPARADOR VISUAL */}
+      <div className="border-t border-white/20 my-2"></div>
+
+      {/* KPI CARDS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {kpiData.map((kpi, idx) => (
           <div key={idx} className="bg-white p-5 rounded-2xl shadow-lg border border-white/10 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
@@ -81,7 +136,10 @@ export default function AdminDashboard() {
         <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-lg border border-white/10">
           <div className="flex justify-between items-center mb-6">
             <h3 className="text-lg font-bold text-slate-800">Tendencia de Satisfacción y Riesgo</h3>
-            <button className="text-xs font-medium text-[#1E3A5F] hover:text-[#172A47] flex items-center gap-1 transition-colors">
+            <button 
+              onClick={() => exportToCSV(trendData, 'tendencias_satisfaccion')}
+              className="text-xs font-medium text-[#1E3A5F] hover:text-[#172A47] flex items-center gap-1 transition-colors"
+            >
               <Download size={14}/> Exportar CSV
             </button>
           </div>
@@ -103,7 +161,15 @@ export default function AdminDashboard() {
 
         {/* DISTRIBUCIÓN DE RIESGO */}
         <div className="bg-white p-6 rounded-2xl shadow-lg border border-white/10 flex flex-col">
-          <h3 className="text-lg font-bold text-slate-800 mb-2">Distribución de Riesgo Psicosocial</h3>
+          <div className="flex justify-between items-center mb-2">
+            <h3 className="text-lg font-bold text-slate-800">Distribución de Riesgo Psicosocial</h3>
+            <button 
+              onClick={() => exportToCSV(riskDistribution, 'distribucion_riesgo')}
+              className="text-xs font-medium text-[#1E3A5F] hover:text-[#172A47] flex items-center gap-1 transition-colors"
+            >
+              <Download size={14}/> Exportar CSV
+            </button>
+          </div>
           <p className="text-xs text-slate-500 mb-4">Basado en Guía de Referencia I NOM-035</p>
           <div className="flex-1 min-h-[200px]">
             <ResponsiveContainer width="100%" height="100%">
@@ -134,80 +200,40 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* ALERTAS Y ACCESOS RÁPIDOS */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        {/* TABLA DE ÁREAS CRÍTICAS */}
-        <div className="lg:col-span-2 bg-white rounded-2xl shadow-lg border border-white/10 overflow-hidden">
-          <div className="p-6 border-b border-slate-100 flex justify-between items-center">
-            <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-              <AlertTriangle className="w-5 h-5 text-amber-500"/> Áreas con Alerta Activa
-            </h3>
-            <span className="text-xs bg-red-50 text-red-600 px-2 py-1 rounded-full font-bold">3 Críticas</span>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 text-slate-500 font-medium">
-                <tr>
-                  <th className="px-6 py-3">Área / Departamento</th>
-                  <th className="px-6 py-3">Factor de Riesgo</th>
-                  <th className="px-6 py-3">Última Evaluación</th>
-                  <th className="px-6 py-3">Estado</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                <tr className="hover:bg-slate-50 transition-colors">
-                  <td className="px-6 py-4 font-medium text-slate-800">Logística y Almacén</td>
-                  <td className="px-6 py-4 text-slate-600">Carga de trabajo excesiva</td>
-                  <td className="px-6 py-4 text-slate-500">Hace 2 días</td>
-                  <td className="px-6 py-4"><span className="bg-red-100 text-red-700 px-2 py-1 rounded-md text-xs font-bold">Crítico</span></td>
-                </tr>
-                <tr className="hover:bg-slate-50 transition-colors">
-                  <td className="px-6 py-4 font-medium text-slate-800">Atención al Cliente</td>
-                  <td className="px-6 py-4 text-slate-600">Falta de reconocimiento</td>
-                  <td className="px-6 py-4 text-slate-500">Hace 5 días</td>
-                  <td className="px-6 py-4"><span className="bg-amber-100 text-amber-700 px-2 py-1 rounded-md text-xs font-bold">Precaución</span></td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+      {/* TABLA DE ÁREAS CRÍTICAS - ANCHO COMPLETO */}
+      <div className="bg-white rounded-2xl shadow-lg border border-white/10 overflow-hidden">
+        <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+          <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+            <AlertTriangle className="w-5 h-5 text-amber-500"/> Áreas con Alerta Activa
+          </h3>
+          <span className="text-xs bg-red-50 text-red-600 px-2 py-1 rounded-full font-bold">3 Críticas</span>
         </div>
-
-        {/* ACCESOS RÁPIDOS */}
-        <div className="space-y-4">
-          <h3 className="text-lg font-bold text-white px-1">Gestión Rápida</h3>
-          
-          <button className="w-full bg-white p-4 rounded-xl shadow-lg border border-white/10 hover:border-[#1E3A5F] hover:shadow-xl transition-all flex items-center gap-3 group text-left">
-            <div className="w-10 h-10 bg-blue-50 text-[#1E3A5F] rounded-lg flex items-center justify-center group-hover:bg-[#1E3A5F] group-hover:text-white transition-colors">
-              <Users size={20}/>
-            </div>
-            <div>
-              <p className="font-bold text-slate-800 text-sm">Asignar Encuestas</p>
-              <p className="text-xs text-slate-500">NOM-035 o Clima Laboral</p>
-            </div>
-          </button>
-
-          <button className="w-full bg-white p-4 rounded-xl shadow-lg border border-white/10 hover:border-[#1E3A5F] hover:shadow-xl transition-all flex items-center gap-3 group text-left">
-            <div className="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-lg flex items-center justify-center group-hover:bg-emerald-600 group-hover:text-white transition-colors">
-              <FileText size={20}/>
-            </div>
-            <div>
-              <p className="font-bold text-slate-800 text-sm">Generar Reporte Oficial</p>
-              <p className="text-xs text-slate-500">Evidencia para auditoría STPS</p>
-            </div>
-          </button>
-
-          <button className="w-full bg-[#1E3A5F] p-4 rounded-xl shadow-lg hover:bg-[#172A47] transition-all flex items-center gap-3 text-white border border-white/10">
-            <div className="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center">
-              <TrendingUp size={20}/>
-            </div>
-            <div>
-              <p className="font-bold text-sm">Ver Recomendaciones IA</p>
-              <p className="text-xs text-blue-200">Plan de acción sugerido</p>
-            </div>
-          </button>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-slate-50 text-slate-500 font-medium">
+              <tr>
+                <th className="px-6 py-3">Área / Departamento</th>
+                <th className="px-6 py-3">Factor de Riesgo</th>
+                <th className="px-6 py-3">Última Evaluación</th>
+                <th className="px-6 py-3">Estado</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              <tr className="hover:bg-slate-50 transition-colors">
+                <td className="px-6 py-4 font-medium text-slate-800">Logística y Almacén</td>
+                <td className="px-6 py-4 text-slate-600">Carga de trabajo excesiva</td>
+                <td className="px-6 py-4 text-slate-500">Hace 2 días</td>
+                <td className="px-6 py-4"><span className="bg-red-100 text-red-700 px-2 py-1 rounded-md text-xs font-bold">Crítico</span></td>
+              </tr>
+              <tr className="hover:bg-slate-50 transition-colors">
+                <td className="px-6 py-4 font-medium text-slate-800">Atención al Cliente</td>
+                <td className="px-6 py-4 text-slate-600">Falta de reconocimiento</td>
+                <td className="px-6 py-4 text-slate-500">Hace 5 días</td>
+                <td className="px-6 py-4"><span className="bg-amber-100 text-amber-700 px-2 py-1 rounded-md text-xs font-bold">Precaución</span></td>
+              </tr>
+            </tbody>
+          </table>
         </div>
-
       </div>
     </div>
   );
