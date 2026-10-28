@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from api.models.area_model import Area
-from api.models.centro_trabajo_model import CentroTrabajo
-from centro_trabajo_serializer import DetailCentroTrabajoSerializer
+from api.models.centro_trabajo_model import Centro_trabajo
+from .centro_trabajo_serializer import DetailCentroTrabajoSerializer
 
 
 ## CRUD AREA

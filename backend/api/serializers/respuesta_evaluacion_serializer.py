@@ -4,7 +4,7 @@ from api.models.respuesta_evaluacion_model import Respuesta_evaluacion
 from .campana_evaluacion_serializer import DetailCampanaEvaluacionSerializer
 from .centro_trabajo_serializer import DetailCentroTrabajoSerializer
 from .puesto_serializer import DetailPuestoSerializer
-from .touchpoint_serializer import DetailTouchpointSerializer
+#from .touchpoint_serializer import DetailTouchpointSerializer
 from .area_serializer import DetailAreaSerializerByEmpresa
 
 
@@ -75,7 +75,7 @@ class ListRespuestaEvaluacionSerializer(serializers.ModelSerializer):
     campana = DetailCampanaEvaluacionSerializer(read_only=True)
     centro_trabajo = DetailCentroTrabajoSerializer(read_only=True)
     puesto = DetailPuestoSerializer(read_only=True)
-    touchpoint = DetailTouchpointSerializer(read_only=True)
+    #touchpoint = DetailTouchpointSerializer(read_only=True)
     area = DetailAreaSerializerByEmpresa(read_only=True)
 
     class Meta:
@@ -97,7 +97,7 @@ class DetailRespuestaEvaluacionSerializer(serializers.ModelSerializer):
     campana = DetailCampanaEvaluacionSerializer(read_only=True)
     centro_trabajo = DetailCentroTrabajoSerializer(read_only=True)
     puesto = DetailPuestoSerializer(read_only=True)
-    touchpoint = DetailTouchpointSerializer(read_only=True)
+    #touchpoint = DetailTouchpointSerializer(read_only=True)
     area = DetailAreaSerializerByEmpresa(read_only=True)
 
     class Meta:

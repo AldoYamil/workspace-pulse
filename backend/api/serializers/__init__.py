@@ -4,3 +4,10 @@ from . import centro_trabajo_serializer
 from . import empresa_serializer
 from . import puesto_serializer
 from . import usuario_serializer
+from . import campana_evaluacion_serializer
+from . import configuracion_umbral_serializer
+from . import detalle_respuesta_serializer
+from . import guia_referencia_serializer
+from . import pregunta_serializer
+from . import respuesta_evaluacion_serializer
+from . import resultado_riesgo_serializer
