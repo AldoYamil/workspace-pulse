@@ -1,3 +1,4 @@
+
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   ShieldAlert,
@@ -12,34 +13,44 @@ import {
   Users,
   LogOut
 } from 'lucide-react';
+import { supabase } from '../lib/supabaseClient';
 
 export default function DashboardLayout() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Función para cerrar sesión
-  const handleLogout = () => {
-    localStorage.removeItem('user');
-    localStorage.removeItem('isAuthenticated');
-    navigate('/');
+  const handleLogout = async () => {
+    if (!supabase) {
+      navigate('/login', { replace: true });
+      return;
+    }
+
+    const { error } = await supabase.auth.signOut();
+
+    if (error) {
+      console.error('Error al cerrar sesión:', error.message);
+      return;
+    }
+
+    navigate('/login', { replace: true });
   };
 
-  // Menú unificado con las rutas de ambas ramas
+  // Menú con las rutas definidas en App.jsx.
   const menuItems = [
     { name: 'Dashboard Ejecutivo', path: '/admin/dashboard', icon: LayoutDashboard },
     { name: 'Gestión Organizacional', path: '/admin/organizacion', icon: Building2 },
     { name: 'Encuestas Aplicadas', path: '/admin/encuestas-aplicadas', icon: Users },
-    { name: 'Riesgos Psicosociales', path: '/riesgos', icon: ShieldAlert },
-    { name: 'Cuestionario activo', path: '/cuestionario', icon: ClipboardList },
-    { name: 'Configuración de Alertas', path: '/alertas', icon: Bell },
-    { name: 'Planes de acción', path: '/planes-accion', icon: ClipboardCheck },
-    { name: 'Reportes de auditoría', path: '/reportes-auditoria', icon: FileSearch },
+    { name: 'Riesgos Psicosociales', path: '/admin/riesgos', icon: ShieldAlert },
+    { name: 'Cuestionario activo', path: '/admin/cuestionario', icon: ClipboardList },
+    { name: 'Configuración de Alertas', path: '/admin/alertas', icon: Bell },
+    { name: 'Planes de acción', path: '/admin/planes-accion', icon: ClipboardCheck },
+    { name: 'Reportes de auditoría', path: '/admin/reportes-auditoria', icon: FileSearch },
   ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-[#1E3A5F] to-slate-900 flex">
-      
-      {/* SIDEBAR BLANCO (FIJO) */}
+
+      {/* SIDEBAR */}
       <aside className="w-64 bg-white border-r border-slate-200 flex flex-col fixed inset-y-0 z-50 shadow-xl">
         <div className="h-20 flex items-center px-6 gap-3 border-b border-slate-100">
           <div className="w-10 h-10 bg-[#1E3A5F] rounded-xl flex items-center justify-center text-white shadow-md">
@@ -54,6 +65,7 @@ export default function DashboardLayout() {
           {menuItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.path;
+
             return (
               <Link
                 key={item.path}
@@ -72,7 +84,7 @@ export default function DashboardLayout() {
         </nav>
 
         <div className="p-4 border-t border-slate-100">
-          <button 
+          <button
             onClick={handleLogout}
             className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-600 hover:bg-red-50 hover:text-red-600 transition-colors"
           >
@@ -84,19 +96,19 @@ export default function DashboardLayout() {
 
       {/* ÁREA DE CONTENIDO */}
       <div className="flex-1 flex flex-col pl-64 min-h-screen">
-        
+
         {/* HEADER */}
         <header className="h-20 bg-white/95 backdrop-blur-md border-b border-white/10 px-8 flex items-center justify-between sticky top-0 z-40 shadow-sm">
           <h2 className="text-xl font-bold text-slate-800 capitalize">
-            {location.pathname.split('/').pop().replace('-', ' ') || 'Panel'}
+            {location.pathname.split('/').pop().replaceAll('-', ' ') || 'Panel'}
           </h2>
-          
+
           <div className="flex items-center gap-4">
             <button className="p-2 text-slate-500 hover:text-[#1E3A5F] transition-colors relative">
               <Bell size={20} />
               <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"></span>
             </button>
-            
+
             <div className="flex items-center gap-3 bg-slate-50 border border-slate-200/80 px-3.5 py-2 rounded-full shadow-sm cursor-pointer hover:bg-slate-100 transition-colors">
               <div className="w-8 h-8 bg-[#1E3A5F] rounded-full flex items-center justify-center text-white font-bold text-xs">
                 RH
