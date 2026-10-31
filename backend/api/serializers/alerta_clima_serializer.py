@@ -50,11 +50,3 @@ class UpdateAlertaClimaSerializer(serializers.ModelSerializer):
             "mensaje",
             "resuelta",
         ]
-
-##DELETE
-class DeleteAlertaClimaSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = AlertaClima
-        fields = [
-            "valor_destacado",
-        ]
