@@ -1,4 +1,3 @@
-version: '3.8'
 
 services:
   db:
@@ -7,10 +6,10 @@ services:
     restart: always
     environment:
       POSTGRES_DB: workspace_db
-      POSTGRES_USER: generic_user
-      POSTGRES_PASSWORD: generic_password
+      POSTGRES_USER: user_demo
+      POSTGRES_PASSWORD: password_demo
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
 

@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.1/ref/settings/
 """
 import os
+from decouple import config
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -27,7 +28,9 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-SUPABASE_JWT_SECRET = os.environ.get('SUPABASE_JWT_SECRET', 'tu-secret-local')
+# Configuración de autenticación con Supabase.
+SUPABASE_JWT_SECRET = config('SUPABASE_JWT_SECRET', default='')
+SUPABASE_JWKS_URL = config('SUPABASE_JWKS_URL', default='')
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -96,8 +99,8 @@ DATABASES = {
         'NAME': 'workspace_db',
         'USER': 'user_demo',
         'PASSWORD': 'password_demo',
-        'HOST': 'localhost',
-        'PORT': '5432',
+        'HOST': '127.0.0.1',
+        'PORT': '5433',
     }
 }
 
