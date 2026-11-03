@@ -6,7 +6,7 @@ class Capacitacion(models.Model):
     instructor = models.CharField(max_length=100)
     fecha_taller = models.DateField()
     horas_duracion = models.IntegerField()
-    planeacion_id = models.ForeignKey('Planeacion', on_delete=models.CASCADE)
+    planeacion = models.ForeignKey('Planeacion', on_delete=models.CASCADE)
     centro_trabajo = models.ForeignKey('Centro_trabajo', on_delete=models.CASCADE)
 
     def __str__(self):
