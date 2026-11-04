@@ -202,18 +202,13 @@ export default function PlanesAccion() {
       {/* ENCABEZADO */}
       <section className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-          <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-[#1E3A5F]">
-            <ClipboardCheck size={18} />
-            Gestión preventiva
-          </div>
 
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">
+          <h1 className="text-3xl font-bold tracking-tight text-white">
             Planes de acción
           </h1>
 
           <p className="mt-2 max-w-2xl text-sm text-slate-500">
-            Organiza acciones preventivas, asigna responsables y da seguimiento
-            a las medidas de bienestar laboral.
+            Organiza acciones preventivas, asigna responsables y da seguimiento a las medidas de bienestar laboral.
           </p>
         </div>
 

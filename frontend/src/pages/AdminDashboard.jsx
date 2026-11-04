@@ -162,7 +162,7 @@ export default function AdminDashboard() {
         {/* DISTRIBUCIÓN DE RIESGO */}
         <div className="bg-white p-6 rounded-2xl shadow-lg border border-white/10 flex flex-col">
           <div className="flex justify-between items-center mb-2">
-            <h3 className="text-lg font-bold text-slate-800">Distribución de Riesgo Psicosocial</h3>
+            <h3 className="text-lg font-bold text-slate-800">Distribución de Riesgo</h3>
             <button 
               onClick={() => exportToCSV(riskDistribution, 'distribucion_riesgo')}
               className="text-xs font-medium text-[#1E3A5F] hover:text-[#172A47] flex items-center gap-1 transition-colors"
@@ -170,7 +170,6 @@ export default function AdminDashboard() {
               <Download size={14}/> Exportar CSV
             </button>
           </div>
-          <p className="text-xs text-slate-500 mb-4">Basado en Guía de Referencia I NOM-035</p>
           <div className="flex-1 min-h-[200px]">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>

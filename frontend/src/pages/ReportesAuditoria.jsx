@@ -255,18 +255,12 @@ export default function ReportesAuditoria() {
       {/* ENCABEZADO */}
       <section className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-          <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-[#1E3A5F]">
-            <FileSearch size={18} />
-            Control documental
-          </div>
-
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">
+          <h1 className="text-3xl font-bold tracking-tight text-white">
             Reportes de auditoría
           </h1>
 
           <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
-            Consulta reportes, revisa su información y da seguimiento
-            a los documentos registrados en la plataforma.
+            Consulta reportes, revisa su información y da seguimiento a los documentos registrados en la plataforma.
           </p>
         </div>
 

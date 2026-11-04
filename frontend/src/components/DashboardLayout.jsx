@@ -25,15 +25,16 @@ export default function DashboardLayout() {
   };
 
   // Menú unificado con las rutas de ambas ramas
+  // Menú unificado CORREGIDO con las rutas anidadas de App.jsx
   const menuItems = [
     { name: 'Dashboard Ejecutivo', path: '/admin/dashboard', icon: LayoutDashboard },
     { name: 'Gestión Organizacional', path: '/admin/organizacion', icon: Building2 },
     { name: 'Encuestas Aplicadas', path: '/admin/encuestas-aplicadas', icon: Users },
-    { name: 'Riesgos Psicosociales', path: '/riesgos', icon: ShieldAlert },
-    { name: 'Cuestionario activo', path: '/cuestionario', icon: ClipboardList },
-    { name: 'Configuración de Alertas', path: '/alertas', icon: Bell },
-    { name: 'Planes de acción', path: '/planes-accion', icon: ClipboardCheck },
-    { name: 'Reportes de auditoría', path: '/reportes-auditoria', icon: FileSearch },
+    { name: 'Riesgos Psicosociales', path: '/admin/riesgos', icon: ShieldAlert }, // ✅ Agregado /admin/
+    { name: 'Cuestionario activo', path: '/admin/cuestionario', icon: ClipboardList }, // ✅ Agregado /admin/
+    { name: 'Configuración de Alertas', path: '/admin/alertas', icon: Bell }, // ✅ Agregado /admin/
+    { name: 'Planes de acción', path: '/admin/planes-accion', icon: ClipboardCheck }, // ✅ Agregado /admin/
+    { name: 'Reportes de auditoría', path: '/admin/reportes-auditoria', icon: FileSearch }, // ✅ Agregado /admin/
   ];
 
   return (
