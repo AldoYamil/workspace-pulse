@@ -8,4 +8,5 @@ urlpatterns = [
     path('', include('api.urls.urls_puesto')),
     path('', include('api.urls.urls_usuario')),
     path('', include('api.urls.urls_guia_referencia')),
+    path('', include('api.urls.urls_panel_riesgos')),
 ]
