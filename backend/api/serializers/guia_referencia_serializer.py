@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from api.models.giua_referencia_model import Guia_referencia
+from api.models.guia_referencia_model import Guia_referencia
 
 
 ## CRUD GUÍA REFERENCIA
