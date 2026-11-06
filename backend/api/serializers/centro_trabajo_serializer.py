@@ -31,7 +31,6 @@ class CreateCentroTrabajoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Centro_trabajo
         fields = [
-            "id",
             "nombre",
             "direccion",
             "num_empleados",
@@ -81,6 +80,7 @@ class ListCentroTrabajoSerializer(serializers.ModelSerializer):
             "nombre",
             "direccion",
             "empresa",
+            "num_empleados",
         ]
 
 
