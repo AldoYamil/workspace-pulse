@@ -9,6 +9,7 @@ import { Link } from 'react-router-dom';
 // IMPORTANTE: Asegúrate de guardar tu captura de pantalla en src/assets/ con este nombre
 // o cambia la ruta en la variable 'dashboardImage'
 import dashboardScreenshot from '../assets/DashboardPhoto.png'; 
+
 const LandingPage = () => {
   const [showRegisterModal, setShowRegisterModal] = useState(false);
 
@@ -185,8 +186,7 @@ const LandingPage = () => {
           </div>
         </div>
       </section>
-
-           {/* Misión, Visión y Objetivos (Centrado) */}
+      {/* Misión, Visión y Objetivos (Centrado) */}
       <section className="py-24 px-6">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
@@ -234,13 +234,13 @@ const LandingPage = () => {
               <h3 className="text-2xl font-bold mb-4 text-white">Objetivos</h3>
               <ul className="text-gray-300 space-y-3 list-none p-0 m-0">
                 <li className="flex items-start justify-center gap-2">
-                  <span className="text-indigo-400 mt-1"></span> Simplificar el cumplimiento normativo de la NOM-035.
+                  <span className="text-indigo-400 mt-1">•</span> Simplificar el cumplimiento normativo de la NOM-035.
                 </li>
                 <li className="flex items-start justify-center gap-2">
-                  <span className="text-indigo-400 mt-1"></span> Fomentar la prevención proactiva del estrés laboral.
+                  <span className="text-indigo-400 mt-1">•</span> Fomentar la prevención proactiva del estrés laboral.
                 </li>
                 <li className="flex items-start justify-center gap-2">
-                  <span className="text-indigo-400 mt-1"></span> Generar data valiosa para la toma de decisiones de RRHH.
+                  <span className="text-indigo-400 mt-1">•</span> Generar data valiosa para la toma de decisiones de RRHH.
                 </li>
               </ul>
             </motion.div>

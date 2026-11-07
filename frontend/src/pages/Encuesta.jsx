@@ -1,3 +1,4 @@
+//para entrar a esta pantalla es con la url: http://localhost:5173/encuesta?surveyId=12345
 // src/pages/Encuesta.jsx
 import { useState } from 'react';
 import { ArrowLeft, Send, ShieldCheck, Info, AlertCircle } from 'lucide-react';
