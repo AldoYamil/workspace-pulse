@@ -2,10 +2,13 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ShieldCheck, BarChart3, Users, ArrowRight, CheckCircle2, Activity,
-  X, Building2 
+  X, Building2, Target, Eye, HeartHandshake, ClipboardList 
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
+// IMPORTANTE: Asegúrate de guardar tu captura de pantalla en src/assets/ con este nombre
+// o cambia la ruta en la variable 'dashboardImage'
+import dashboardScreenshot from '../assets/DashboardPhoto.png'; 
 const LandingPage = () => {
   const [showRegisterModal, setShowRegisterModal] = useState(false);
 
@@ -20,13 +23,10 @@ const LandingPage = () => {
       {/* Navbar Blanco */}
       <nav className="fixed w-full z-50 bg-white border-b border-gray-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-          {/* Logo con Icono de Pulso */}
           <div className="text-2xl font-bold tracking-tighter text-[#1E3A5F] flex items-center gap-2">
             <Activity className="text-blue-600" size={28} strokeWidth={2.5} />
             WorkSpace<span className="text-slate-700">Pulse</span>
           </div>
-
-          {/* Botones de Acción (Sin menú de usuario) */}
           <div className="flex items-center gap-3">
             <button 
               onClick={() => setShowRegisterModal(true)}
@@ -47,51 +47,28 @@ const LandingPage = () => {
       <AnimatePresence>
         {showRegisterModal && (
           <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
             onClick={() => setShowRegisterModal(false)}
           >
             <motion.div 
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
+              initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
               className="bg-white rounded-2xl p-8 w-full max-w-md shadow-2xl relative"
               onClick={(e) => e.stopPropagation()}
             >
-              <button 
-                onClick={() => setShowRegisterModal(false)}
-                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
-              >
-                <X size={24} />
-              </button>
-              
+              <button onClick={() => setShowRegisterModal(false)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"><X size={24} /></button>
               <h3 className="text-2xl font-bold text-slate-900 mb-2">Registro Empresarial</h3>
               <p className="text-gray-500 mb-6 text-sm">Comienza a medir el pulso de tu organización cumpliendo con la NOM-035.</p>
-              
-              {/*crear cuenta para una empresa*/}
               <form className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Nombre de la Empresa</label>
-                  <input 
-                    type="text" 
-                    placeholder="Ej. Corporativo Selegna S.A. de C.V."
-                    className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#1E3A5F] focus:border-[#1E3A5F] outline-none text-slate-900"
-                  />
+                  <input type="text" placeholder="Ej. Corporativo Selegna S.A. de C.V." className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#1E3A5F] outline-none text-slate-900" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">RFC</label>
-                  <input 
-                    type="text" 
-                    placeholder="Ej. CSF261022ABC"
-                    maxLength={13}
-                    className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#1E3A5F] focus:border-[#1E3A5F] outline-none text-slate-900 uppercase"
-                  />
+                  <input type="text" placeholder="Ej. CSF261022ABC" maxLength={13} className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#1E3A5F] outline-none text-slate-900 uppercase" />
                 </div>
-                <button type="submit" className="w-full bg-[#1E3A5F] hover:bg-blue-900 text-white font-bold py-3 rounded-lg transition-colors mt-2">
-                  Crear Cuenta Empresarial
-                </button>
+                <button type="submit" className="w-full bg-[#1E3A5F] hover:bg-blue-900 text-white font-bold py-3 rounded-lg transition-colors mt-2">Crear Cuenta Empresarial</button>
               </form>
             </motion.div>
           </motion.div>
@@ -118,29 +95,30 @@ const LandingPage = () => {
             </div>
           </motion.div>
 
+          {/* IMAGEN REAL DEL SISTEMA */}
           <motion.div 
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8 }}
-            className="relative"
+            className="relative group"
           >
-            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 shadow-2xl relative z-10">
-              <div className="flex justify-between items-center mb-6">
-                <div className="h-4 w-32 bg-white/20 rounded"></div>
-                <div className="h-8 w-8 bg-green-500/20 rounded-full flex items-center justify-center">
-                  <Activity size={16} className="text-green-400" />
-                </div>
-              </div>
-              <div className="space-y-4">
-                <div className="h-32 bg-gradient-to-r from-blue-600/20 to-purple-600/20 rounded-lg border border-white/5"></div>
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="h-20 bg-white/5 rounded-lg"></div>
-                  <div className="h-20 bg-white/5 rounded-lg"></div>
-                  <div className="h-20 bg-white/5 rounded-lg"></div>
-                </div>
+            <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-cyan-400 rounded-2xl blur opacity-30 group-hover:opacity-50 transition duration-1000"></div>
+            <div className="relative bg-[#1E3A5F] rounded-2xl border border-white/10 overflow-hidden shadow-2xl">
+              {/* Aquí se carga tu imagen real. Si no existe, muestra un placeholder */}
+              <img 
+                src={dashboardScreenshot} 
+                alt="Dashboard WorkSpace Pulse" 
+                className="w-full h-auto object-cover opacity-90 hover:opacity-100 transition-opacity duration-500"
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                  e.target.nextSibling.style.display = 'flex';
+                }}
+              />
+              {/* Fallback si la imagen no carga */}
+              <div className="hidden w-full h-64 items-center justify-center bg-slate-800 text-gray-400">
+                Vista previa del Dashboard
               </div>
             </div>
-            <div className="absolute -inset-4 bg-blue-500/20 blur-3xl rounded-full -z-10"></div>
           </motion.div>
         </div>
       </section>
@@ -168,8 +146,28 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* Why NOM-035 Section */}
+      {/* How it Works (Sección Extra Agregada) */}
       <section className="py-20 px-6">
+        <div className="max-w-6xl mx-auto text-center">
+          <h2 className="text-3xl font-bold mb-12">¿Cómo funciona WorkSpace-Pulse?</h2>
+          <div className="grid md:grid-cols-3 gap-8">
+            {[
+              { step: "01", title: "Configura tu Empresa", desc: "Registra tus centros de trabajo y define los grupos de empleados a evaluar." },
+              { step: "02", title: "Aplica Encuestas", desc: "Distribuye cuestionarios validados por la STPS de forma segura y anónima." },
+              { step: "03", title: "Obtén Resultados", desc: "Visualiza reportes automáticos y genera la documentación legal requerida." }
+            ].map((item, i) => (
+              <div key={i} className="relative p-6 bg-[#1E3A5F]/30 rounded-xl border border-blue-500/20 hover:border-blue-400/50 transition-colors">
+                <div className="text-4xl font-black text-blue-500/20 absolute top-4 right-4">{item.step}</div>
+                <h3 className="text-xl font-bold mb-2 text-blue-300">{item.title}</h3>
+                <p className="text-gray-400 text-sm">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Why NOM-035 Section */}
+      <section className="py-20 px-6 bg-black/20">
         <div className="max-w-5xl mx-auto text-center">
           <motion.h2 initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} className="text-3xl md:text-4xl font-bold mb-6">
             ¿Por qué es vital la NOM-035?
@@ -188,8 +186,70 @@ const LandingPage = () => {
         </div>
       </section>
 
+           {/* Misión, Visión y Objetivos (Centrado) */}
+      <section className="py-24 px-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Nuestra Razón de Ser</h2>
+            <p className="text-gray-400 max-w-2xl mx-auto">Comprometidos con la transformación cultural de las organizaciones mexicanas.</p>
+          </div>
+          
+          <div className="grid md:grid-cols-3 gap-8">
+            {/* Misión */}
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+              className="p-8 rounded-2xl bg-gradient-to-b from-white/10 to-white/5 border border-white/10 hover:border-blue-400/50 transition-all flex flex-col items-center text-center"
+            >
+              <div className="w-16 h-16 bg-blue-600/20 rounded-full flex items-center justify-center mb-6">
+                <Target className="text-blue-400" size={32} />
+              </div>
+              <h3 className="text-2xl font-bold mb-4 text-white">Misión</h3>
+              <p className="text-gray-300 leading-relaxed">
+                Proveer herramientas tecnológicas accesibles que permitan a las empresas identificar, prevenir y atender los factores de riesgo psicosocial, garantizando entornos laborales seguros y legales.
+              </p>
+            </motion.div>
+
+            {/* Visión */}
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.2 }}
+              className="p-8 rounded-2xl bg-gradient-to-b from-white/10 to-white/5 border border-white/10 hover:border-cyan-400/50 transition-all flex flex-col items-center text-center"
+            >
+              <div className="w-16 h-16 bg-cyan-600/20 rounded-full flex items-center justify-center mb-6">
+                <Eye className="text-cyan-400" size={32} />
+              </div>
+              <h3 className="text-2xl font-bold mb-4 text-white">Visión</h3>
+              <p className="text-gray-300 leading-relaxed">
+                Ser la plataforma líder en México para la gestión del bienestar organizacional, reconocida por transformar la cultura laboral y elevar los estándares de salud mental en el trabajo.
+              </p>
+            </motion.div>
+
+            {/* Objetivos */}
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.4 }}
+              className="p-8 rounded-2xl bg-gradient-to-b from-white/10 to-white/5 border border-white/10 hover:border-indigo-400/50 transition-all flex flex-col items-center text-center"
+            >
+              <div className="w-16 h-16 bg-indigo-600/20 rounded-full flex items-center justify-center mb-6">
+                <HeartHandshake className="text-indigo-400" size={32} />
+              </div>
+              <h3 className="text-2xl font-bold mb-4 text-white">Objetivos</h3>
+              <ul className="text-gray-300 space-y-3 list-none p-0 m-0">
+                <li className="flex items-start justify-center gap-2">
+                  <span className="text-indigo-400 mt-1"></span> Simplificar el cumplimiento normativo de la NOM-035.
+                </li>
+                <li className="flex items-start justify-center gap-2">
+                  <span className="text-indigo-400 mt-1"></span> Fomentar la prevención proactiva del estrés laboral.
+                </li>
+                <li className="flex items-start justify-center gap-2">
+                  <span className="text-indigo-400 mt-1"></span> Generar data valiosa para la toma de decisiones de RRHH.
+                </li>
+              </ul>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
       {/* Footer Blanco */}
-      <footer className="border-t border-gray-200 py-12 px-6 mt-12 bg-white text-slate-900">
+      <footer className="border-t border-gray-200 py-12 px-6 bg-white text-slate-900">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="text-xl font-bold text-[#1E3A5F] flex items-center gap-2">
             <Activity className="text-blue-600" size={24} />

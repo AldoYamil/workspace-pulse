@@ -316,13 +316,9 @@ export default function PanelRiesgos() {
       {/* ENCABEZADO */}
       <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-white">
-            Panel de riesgos psicosociales
-          </h1>
-
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-300">
-            Analiza los factores de riesgo, identifica tendencias
-            y detecta las áreas que requieren atención prioritaria.
+          <h1 className="text-3xl font-bold text-white mb-2">Panel de riesgos psicosociales</h1>
+          <p className="text-slate-300 text-base">
+            Analiza los factores de riesgo, identifica tendenciasy detecta las áreas que requieren atención prioritaria.
           </p>
         </div>
 

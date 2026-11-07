@@ -255,11 +255,11 @@ export default function ReportesAuditoria() {
       {/* ENCABEZADO */}
       <section className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-white">
+          <h1 className="text-3xl font-bold text-white mb-2">
             Reportes de auditoría
           </h1>
 
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
+          <p className="text-slate-300 text-base">
             Consulta reportes, revisa su información y da seguimiento a los documentos registrados en la plataforma.
           </p>
         </div>
@@ -799,7 +799,7 @@ function TarjetaIndicador({
   );
 }
 
-// Componente reutilizable para los detalles de la vista previa.
+// Componente reutilizable para los detalles de la vista previa. 
 function DatoReporte({ etiqueta, valor }) {
   return (
     <div className="rounded-xl bg-slate-50 p-4">

@@ -13,6 +13,8 @@ import PanelRiesgos from './pages/PanelRiesgos';
 import ConfiguracionAlertas from './pages/ConfiguracionAlertas';
 import PlanesAccion from './pages/PlanesAccion';
 import ReportesAuditoria from './pages/ReportesAuditoria';
+import UserProfile from './pages/UserProfile';
+import Encuesta from './pages/Encuesta';
 
 export default function App() {
   return (
@@ -20,10 +22,12 @@ export default function App() {
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<Login />} />
+         <Route path="/encuesta" element={<Encuesta />} /> 
 
         <Route path="/admin" element={<DashboardLayout />}>
           <Route index element={<Navigate to="/admin/dashboard" replace />} />
           
+          <Route path="perfil" element={<UserProfile />} />
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="organizacion" element={<OrgManagement />} />
           <Route path="encuestas-aplicadas" element={<AppliedSurveys />} />
