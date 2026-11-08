@@ -9,4 +9,7 @@ urlpatterns = [
     path('', include('api.urls.urls_usuario')),
     path('', include('api.urls.urls_guia_referencia')),
     path('', include('api.urls.urls_panel_riesgos')),
+    path('', include('api.urls.urls_notificaciones')),
+    path('', include('api.urls.urls_planeacion')),
+    path('', include('api.urls.urls_planes_accion')),
 ]

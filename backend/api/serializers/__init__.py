@@ -11,3 +11,4 @@ from . import guia_referencia_serializer
 from . import pregunta_serializer
 from . import respuesta_evaluacion_serializer
 from . import resultado_riesgo_serializer
+from . import planeacion_serializer
