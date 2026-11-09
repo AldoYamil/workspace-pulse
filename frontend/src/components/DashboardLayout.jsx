@@ -1,5 +1,8 @@
 
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
+// src/components/DashboardLayout.jsx (o donde lo tengas)
+import { Outlet, Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import { useState } from 'react'; // Asegúrate de importar useState
 import {
   ShieldAlert,
   ClipboardList,
@@ -11,13 +14,15 @@ import {
   LayoutDashboard,
   Building2,
   Users,
-  LogOut
+  LogOut,
+  UserCircle // Agregamos este ícono
 } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 
 export default function DashboardLayout() {
   const location = useLocation();
   const navigate = useNavigate();
+  const [isMenuOpen, setIsMenuOpen] = useState(false); // Estado para el dropdown
 
   const handleLogout = async () => {
     if (!supabase) {
@@ -98,6 +103,8 @@ export default function DashboardLayout() {
       <div className="flex-1 flex flex-col pl-64 min-h-screen">
 
         {/* HEADER */}
+        
+        {/* HEADER MODIFICADO */}
         <header className="h-20 bg-white/95 backdrop-blur-md border-b border-white/10 px-8 flex items-center justify-between sticky top-0 z-40 shadow-sm">
           <h2 className="text-xl font-bold text-slate-800 capitalize">
             {location.pathname.split('/').pop().replaceAll('-', ' ') || 'Panel'}
@@ -108,13 +115,41 @@ export default function DashboardLayout() {
               <Bell size={20} />
               <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"></span>
             </button>
+            
+            {/* BOTÓN DE USUARIO CON DROPDOWN */}
+            <div className="relative">
+              <button 
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className="flex items-center gap-3 bg-slate-50 border border-slate-200/80 px-3.5 py-2 rounded-full shadow-sm hover:bg-slate-100 transition-colors"
+              >
+                <div className="w-8 h-8 bg-[#1E3A5F] rounded-full flex items-center justify-center text-white font-bold text-xs">
+                  RH
+                </div>
+                <span className="text-sm font-semibold text-slate-700">Gerente RH</span>
+                <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${isMenuOpen ? 'rotate-180' : ''}`} />
+              </button>
 
-            <div className="flex items-center gap-3 bg-slate-50 border border-slate-200/80 px-3.5 py-2 rounded-full shadow-sm cursor-pointer hover:bg-slate-100 transition-colors">
-              <div className="w-8 h-8 bg-[#1E3A5F] rounded-full flex items-center justify-center text-white font-bold text-xs">
-                RH
-              </div>
-              <span className="text-sm font-semibold text-slate-700">Gerente RH</span>
-              <ChevronDown className="w-4 h-4 text-slate-400" />
+              {/* MENÚ DESPLEGABLE */}
+              {isMenuOpen && (
+                <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-slate-100 py-2 animate-in fade-in zoom-in-95 duration-200 origin-top-right">
+                  <Link 
+                    to="/admin/perfil" 
+                    onClick={() => setIsMenuOpen(false)}
+                    className="flex items-center gap-3 px-4 py-3 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+                  >
+                    <UserCircle size={18} className="text-slate-400" />
+                    Mi Perfil
+                  </Link>
+                  <div className="border-t border-slate-100 my-1"></div>
+                  <button 
+                    onClick={() => { setIsMenuOpen(false); handleLogout(); }}
+                    className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors text-left"
+                  >
+                    <LogOut size={18} />
+                    Cerrar Sesión
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </header>

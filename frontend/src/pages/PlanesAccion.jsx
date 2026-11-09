@@ -180,11 +180,13 @@ export default function PlanesAccion() {
     <div className="mx-auto max-w-7xl space-y-8 p-6">
       <section className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-          <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-[#1E3A5F]">
-            <ClipboardCheck size={18} /> Gestión preventiva
-          </div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">Planes de acción</h1>
-          <p className="mt-2 text-sm text-slate-500">Medidas correctivas vinculadas a los resultados de la NOM-035.</p>
+
+          <h1 className="text-3xl font-bold text-white mb-2">
+            Planes de acción
+          </h1>
+          <p className="text-slate-300 text-base">
+            Organiza acciones preventivas, asigna responsables y da seguimiento a las medidas de bienestar laboral.
+          </p>
         </div>
 
         <button

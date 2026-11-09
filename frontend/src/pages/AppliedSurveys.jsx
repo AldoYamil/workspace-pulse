@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { 
   Search, Filter, QrCode, Link as LinkIcon, Copy, 
-  CheckCircle2, Clock, CalendarDays, BarChart3, AlertCircle 
+  CheckCircle2, Clock, CalendarDays, BarChart3, AlertCircle, X, Download 
 } from 'lucide-react';
 
 // --- DATOS MOCK (Simulando Backend) ---
@@ -53,15 +53,23 @@ export default function AppliedSurveys() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [copiedId, setCopiedId] = useState(null);
+  
+  // Estados para el Modal de QR
+  const [showQrModal, setShowQrModal] = useState(false);
+  const [selectedSurveyForQr, setSelectedSurveyForQr] = useState(null);
 
-  // Función para copiar enlace simulado
   const handleCopyLink = (id) => {
     navigator.clipboard.writeText(`https://workspace-pulse.app/survey/${id}`);
     setCopiedId(id);
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  // Renderizado de Badge de Estatus
+  // Función para abrir el modal
+  const openQrModal = (survey) => {
+    setSelectedSurveyForQr(survey);
+    setShowQrModal(true);
+  };
+
   const StatusBadge = ({ status }) => {
     const styles = {
       active: 'bg-emerald-100 text-emerald-700 border-emerald-200',
@@ -85,7 +93,6 @@ export default function AppliedSurveys() {
     );
   };
 
-  // Filtrado de datos
   const filteredSurveys = MOCK_SURVEYS.filter(survey => {
     const matchesSearch = survey.name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = filterStatus === 'all' || survey.status === filterStatus;
@@ -93,7 +100,6 @@ export default function AppliedSurveys() {
   });
 
   return (
-    // CONTENIDO PARA DASHBOARDLAYOUT (Fondo azul manejado por el Layout padre)
     <div className="space-y-6 animate-in fade-in duration-300">
       
       {/* HEADER DE SECCIÓN */}
@@ -102,7 +108,7 @@ export default function AppliedSurveys() {
         <p className="text-slate-300 text-base">Registro histórico, monitoreo de participación y generación de enlaces de distribución.</p>
       </div>
 
-      {/* BARRA DE FILTROS Y BÚSQUEDA (Glassmorphism) */}
+      {/* BARRA DE FILTROS Y BÚSQUEDA */}
       <div className="flex flex-col md:flex-row gap-4 bg-white/10 backdrop-blur-md p-4 rounded-xl border border-white/10 shadow-lg">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
@@ -177,9 +183,10 @@ export default function AppliedSurveys() {
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        {/* Botón Generar QR */}
+                        {/* Botón Generar QR - CORREGIDO CON ONCLICK */}
                         <button 
-                          title="Generar Código QR"
+                          onClick={() => openQrModal(survey)}
+                          title="Gestionar Touchpoints y QR"
                           className="p-2 text-slate-400 hover:text-[#1E3A5F] hover:bg-blue-50 rounded-lg transition-colors"
                         >
                           <QrCode size={18} />
@@ -210,7 +217,7 @@ export default function AppliedSurveys() {
         </div>
       </div>
 
-      {/* NOTA LEGAL / PIE DE PÁGINA INFORMATIVO */}
+      {/* NOTA LEGAL */}
       <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4 flex items-start gap-3">
         <BarChart3 className="w-5 h-5 text-slate-300 mt-0.5 shrink-0" />
         <p className="text-sm text-slate-300 leading-relaxed">
@@ -218,6 +225,58 @@ export default function AppliedSurveys() {
         </p>
       </div>
 
+      {/* MODAL DE GENERACIÓN DE QR */}
+      {showQrModal && selectedSurveyForQr && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+              <h3 className="text-xl font-bold text-slate-800">Touchpoints: {selectedSurveyForQr.name}</h3>
+              <button onClick={() => setShowQrModal(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
+                <X size={24} />
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-6">
+              <div className="flex flex-col items-center justify-center p-4 bg-slate-50 rounded-xl border border-dashed border-slate-300">
+                <div className="w-40 h-40 bg-white p-2 rounded-lg shadow-sm mb-3 flex items-center justify-center">
+                  <QrCode size={80} className="text-[#1E3A5F]" />
+                </div>
+                <p className="text-sm text-slate-500 text-center">Escanea para acceder a la encuesta</p>
+                <p className="text-xs text-slate-400 mt-1">ID: TP-{selectedSurveyForQr.id}-001</p>
+              </div>
+
+              <div className="space-y-3">
+                <label className="block text-sm font-medium text-slate-700">Tipo de Touchpoint</label>
+                <select className="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#1E3A5F] outline-none bg-white">
+                  <option>Campaña Digital (Enlace Web)</option>
+                  <option>Kiosco Físico (Recepción)</option>
+                  <option>Sala de Juntas / Área Común</option>
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <button className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors text-sm font-medium">
+                  <LinkIcon size={16} />
+                  Copiar URL
+                </button>
+                <button className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg bg-[#1E3A5F] text-white hover:bg-[#162c4a] transition-colors text-sm font-medium">
+                  <Download size={16} />
+                  Descargar PNG
+                </button>
+              </div>
+            </div>
+
+            <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end">
+              <button 
+                onClick={() => setShowQrModal(false)} 
+                className="px-4 py-2 text-slate-600 font-medium hover:bg-slate-200 rounded-lg transition-colors"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
