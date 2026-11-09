@@ -1,6 +1,3 @@
-
-import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-// src/components/DashboardLayout.jsx (o donde lo tengas)
 import { Outlet, Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useState } from 'react'; // Asegúrate de importar useState
 import {

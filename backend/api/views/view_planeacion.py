@@ -1,6 +1,5 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
-<<<<<<< HEAD
 from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
 
@@ -63,7 +62,6 @@ class DeletePlaneacionApiView(generics.DestroyAPIView):
     permission_classes = [IsAuthenticated]
     queryset = Planeacion.objects.all()
     serializer_class = planeacion_serializer.DeletePlaneacionSerializer
-=======
 from rest_framework import status
 from api.models import Planeacion, ResultadoRiesgo, Usuario
 from api.serializers.planeacion_serializer import PlaneacionSerializer
@@ -101,4 +99,3 @@ class UpdateDeletePlaneacionApiView(APIView):
             return Response({"message": "Plan eliminado correctamente"}, status=status.HTTP_204_NO_CONTENT)
         except Planeacion.DoesNotExist:
             return Response({"error": "Plan no encontrado"}, status=status.HTTP_404_NOT_FOUND)
->>>>>>> origin/diego-enrique-v2

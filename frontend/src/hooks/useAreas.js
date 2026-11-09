@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { areaService } from '../services/areaService';
 
-export const useArea = () => {
+export const useAreas = () => {
   const [areas, setAreas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -49,7 +49,7 @@ export const useArea = () => {
     areas,
     loading,
     error,
-    refetch: fetchCentros,
+    refetch: fetchAreas,
     createArea,
     deleteArea,
   };

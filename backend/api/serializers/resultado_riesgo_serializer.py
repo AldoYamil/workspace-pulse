@@ -141,3 +141,22 @@ class ListResultadoRiesgoByAreaCampanaSerializer(serializers.ModelSerializer):
             "area",
             "puesto",
         ]
+
+#Detail
+class DetailResultadoRiesgoSerializer(serializers.ModelSerializer):
+    campaña_evaluacion = DetailCampanaEvaluacionSerializer(read_only=True)
+    area = DetailAreaSerializerByEmpresa(read_only=True)
+    puesto = DetailPuestoSerializer(read_only=True)
+    fecha_calculo = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S", read_only=True)
+
+    class Meta:
+        model = ResultadoRiesgo
+        fields = [
+            "id",
+            "puntuacion_riesgo",
+            "nivel_riesgo",
+            "fecha_calculo",
+            "campaña_evaluacion",
+            "area",
+            "puesto",
+        ]

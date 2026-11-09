@@ -46,8 +46,8 @@ class ListAreaApiView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        empresa_id = usuario_logueado.centrotrabajo.empresa_id
-        area = Area.objects.filter(centrotrabajo__empresa_id=empresa_id)
+        empresa_id = usuario_perfil.centro_trabajo.empresa_id
+        area = Area.objects.filter(centro_trabajo__empresa_id=empresa_id)
         data = area_serializer.ListAreaSerializerByEmpresa(area, many=True).data
         return Response (data)
 
