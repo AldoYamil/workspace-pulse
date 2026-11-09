@@ -1,5 +1,6 @@
 // src/pages/ConfiguracionAlertas.jsx
 import { useState } from 'react';
+import EvaluarAlertas from '../components/EvaluarAlertas';
 
 export default function ConfiguracionAlertas() {
   // Estados del formulario
@@ -196,6 +197,9 @@ export default function ConfiguracionAlertas() {
           </button>
 
         </form>
+
+        {/* EVALUACIÓN DE ALERTAS (llama al backend, que envía los correos con Resend) */}
+        <EvaluarAlertas />
 
         {/* FOOTER LEGAL */}
         <div className="bg-slate-50 px-8 py-4 border-t border-slate-100 text-center">

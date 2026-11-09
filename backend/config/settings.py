@@ -23,6 +23,16 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-1%0-c_c@rw+u$32-5y71vjif42*1fjztcphcd2d#a+1#jm^fk*'
 
+# Resend (correos de alerta)
+RESEND_API_KEY = config('RESEND_API_KEY', default='')
+RESEND_FROM_EMAIL = config('RESEND_FROM_EMAIL', default='Workspace Pulse <onboarding@resend.dev>')
+FRONTEND_URL = config('FRONTEND_URL', default='http://localhost:5173')
+
+# Groq (recomendaciones con IA)
+GROQ_API_KEY = config('GROQ_API_KEY', default='')
+GROQ_MODEL = config('GROQ_MODEL', default='openai/gpt-oss-120b')
+
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
