@@ -10,12 +10,13 @@ from api.models.touchpoint_model import Touchpoint
 from api.models.centro_trabajo_model import Centro_trabajo
 from api.models.puesto_model import Puesto
 from api.models.area_model import Area
+from api.models.usuario_model import Usuario
 
 ##CREATE
 class CreateTouchpointApiView(generics.CreateAPIView):
     permission_classes = [IsAuthenticated]
     queryset = Touchpoint.objects.all()
-    cerailizer_class = touchpoint_serializer.CreateTouchpointSerializer
+    serializer_class = touchpoint_serializer.CreateTouchpointSerializer
 
 ##READ
 
@@ -24,10 +25,17 @@ class ListTouchpointApiView(APIView):
     permission_classes = [IsAuthenticated]
     def get(self, request):
         usuario_logueado = request.user
-        empresa_id = usuario_logueado.centrotrabajo.empresa_id
+        perfil = Usuario.objects.select_related('centro_trabajo').filter(email=request.user.email).first()
+        if not perfil or not perfil.centro_trabajo:
+            return Response(
+                {"error": "El usuario no tiene un centro de trabajo o empresa asignada."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        empresa_id = perfil.centro_trabajo.empresa_id
         touchpoints = Touchpoint.objects.filter(
-            centro_trabajo__empresa_id=empresa_id
-        )
+                    centro_trabajo__empresa_id=empresa_id
+                )
 
         centro_id = request.query_params.get('centro_id')
         area_id = request.query_params.get('area_id')

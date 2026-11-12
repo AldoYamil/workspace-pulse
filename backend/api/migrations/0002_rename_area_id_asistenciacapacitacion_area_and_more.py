@@ -20,9 +20,4 @@ class Migration(migrations.Migration):
             old_name='planeacion_id',
             new_name='planeacion',
         ),
-        migrations.RenameField(
-            model_name='detallerespuesta',
-            old_name='respuesta_evaluacion_id',
-            new_name='respuesta_evaluacion',
-        ),
     ]

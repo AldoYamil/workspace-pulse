@@ -81,6 +81,7 @@ class ListCentroTrabajoSerializer(serializers.ModelSerializer):
             "direccion",
             "empresa",
             "num_empleados",
+            "codigo_postal",
         ]
 
 

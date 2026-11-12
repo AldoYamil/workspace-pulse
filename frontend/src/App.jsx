@@ -17,6 +17,7 @@ import PlanesAccion from './pages/PlanesAccion';
 import ReportesAuditoria from './pages/ReportesAuditoria';
 import UserProfile from './pages/UserProfile';
 import Encuesta from './pages/Encuesta';
+import QR from './pages/TouchpointsQR'
 
 export default function App() {
   return (
@@ -39,6 +40,7 @@ export default function App() {
           <Route path="alertas" element={<ConfiguracionAlertas />} />
           <Route path="planes-accion" element={<PlanesAccion />} />
           <Route path="reportes-auditoria" element={<ReportesAuditoria />} />
+          <Route path="touchpointqr" element={<QR/>}/>
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

@@ -49,7 +49,7 @@ export const usePuesto = () => {
     puestos,
     loading,
     error,
-    refetch: fetchCentros,
+    refetch: fetchPuestos,
     createPuesto,
     deletePuesto,
   };

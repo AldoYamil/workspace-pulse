@@ -12,7 +12,8 @@ import {
   Building2,
   Users,
   LogOut,
-  UserCircle // Agregamos este ícono
+  UserCircle, // Agregamos este ícono
+  QrCode
 } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 
@@ -47,6 +48,7 @@ export default function DashboardLayout() {
     { name: 'Configuración de Alertas', path: '/admin/alertas', icon: Bell },
     { name: 'Planes de acción', path: '/admin/planes-accion', icon: ClipboardCheck },
     { name: 'Reportes de auditoría', path: '/admin/reportes-auditoria', icon: FileSearch },
+    { name: 'Generador de QR', path: '/admin/touchpointqr', icon: QrCode}
   ];
 
   return (

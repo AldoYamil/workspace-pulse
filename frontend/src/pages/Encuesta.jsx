@@ -19,7 +19,7 @@ const SURVEY_DATA = {
 export default function Encuesta() {
   const [answers, setAnswers] = useState({});
   const [isSubmitted, setIsSubmitted] = useState(false);
-  const [currentStep, setCurrentStep] = useState(0); // Para modo paso a paso opcional
+  const [currentStep, setCurrentStep] = useState(0);
 
   const handleAnswer = (questionId, value) => {
     setAnswers(prev => ({ ...prev, [questionId]: value }));

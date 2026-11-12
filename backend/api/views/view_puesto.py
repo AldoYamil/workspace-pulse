@@ -45,8 +45,15 @@ class ListPuestoApiView(APIView):
                 {"error": "El usuario autenticado no tiene una puesto asignado en su perfil."},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        empresa_id = usuario_logueado.centrotrabajo.empresa_id
-        puesto = Puesto.objects.filter(area__centrotrabajo__empresa_id=empresa_id)
+        perfil = Usuario.objects.select_related('centro_trabajo').filter(email=request.user.email).first()
+        if not perfil or not perfil.centro_trabajo:
+            return Response(
+                {"error": "El usuario no tiene un centro de trabajo o empresa asignada."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        empresa_id = perfil.centro_trabajo.empresa_id
+        puesto = Puesto.objects.filter(area__centro_trabajo__empresa_id=empresa_id)
         data = puesto_serializer.ListPuestoSerializer(puesto, many=True).data
         return Response (data)
 

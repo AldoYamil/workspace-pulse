@@ -1,12 +1,12 @@
 from django.shortcuts import render
 from rest_framework.views import APIView
-from rest_framework.response import Response, status
-from rest_framework import generics
+from rest_framework.response import Response
+from rest_framework import generics, status
 
 from django.contrib.auth.models import User
 
 from api.serializers import pregunta_serializer
-from api.models.giua_referencia_model import GuiaReferencia
+from api.models.guia_referencia_model import Guia_referencia
 from api.models.pregunta_model import Pregunta
 
 ##CREATE
