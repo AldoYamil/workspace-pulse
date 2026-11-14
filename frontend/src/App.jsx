@@ -17,6 +17,12 @@ import PlanesAccion from './pages/PlanesAccion';
 import ReportesAuditoria from './pages/ReportesAuditoria';
 import UserProfile from './pages/UserProfile';
 import Encuesta from './pages/Encuesta';
+import NotFound from './pages/NotFound';
+import Unauthorized from './pages/Unauthorized';
+import EncuestaFinalizada from './pages/EncuestaFinalizada';
+import Capacitaciones from './pages/Capacitaciones'
+import CampanasEvaluacion from './pages/CampanasEvaluacion';
+import PoliticasPrevencion from './pages/PoliticasPrevencion';
 
 export default function App() {
   return (
@@ -26,6 +32,11 @@ export default function App() {
         <Route path="/login" element={<Login />} />
          <Route path="/encuesta" element={<Encuesta />} /> 
 
+         <Route path="*" element={<NotFound />} />
+         <Route path="/unauthorized" element={<Unauthorized />} />
+         <Route path="/encuesta-finalizada" element={<EncuestaFinalizada />} />
+
+        
         <Route path="/admin" element={<DashboardLayout />}>
           <Route index element={<Navigate to="/admin/dashboard" replace />} />
           
@@ -33,15 +44,16 @@ export default function App() {
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="organizacion" element={<OrgManagement />} />
           <Route path="encuestas-aplicadas" element={<AppliedSurveys />} />
-          
           <Route path="cuestionario" element={<CuestionarioActivo />} />
           <Route path="riesgos" element={<PanelRiesgos />} />
           <Route path="alertas" element={<ConfiguracionAlertas />} />
           <Route path="planes-accion" element={<PlanesAccion />} />
           <Route path="reportes-auditoria" element={<ReportesAuditoria />} />
-        </Route>
+          <Route path="capacitaciones" element={<Capacitaciones />} />
+          <Route path="campanas-evaluacion" element={<CampanasEvaluacion />} />
+          <Route path="politicas-prevencion" element={<PoliticasPrevencion />} />
 
-        <Route path="*" element={<Navigate to="/" replace />} />
+        </Route>
       </Routes>
     </BrowserRouter>
   );

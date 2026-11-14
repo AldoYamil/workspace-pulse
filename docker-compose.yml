@@ -1,15 +1,14 @@
-
 services:
   db:
     image: postgres:15-alpine
-    container_name: workspace_pulse_db
+    container_name: workspace_pulse_db2
     restart: always
     environment:
       POSTGRES_DB: workspace_db
       POSTGRES_USER: user_demo
       POSTGRES_PASSWORD: password_demo
     ports:
-      - "5433:5432"
+      - "5434:5432"  # Puerto externo cambiado a 5434 para evitar conflicto
     volumes:
       - postgres_data:/var/lib/postgresql/data
 

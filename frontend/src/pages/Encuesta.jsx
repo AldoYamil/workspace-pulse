@@ -1,7 +1,8 @@
 //para entrar a esta pantalla es con la url: http://localhost:5173/encuesta?surveyId=12345
 // src/pages/Encuesta.jsx
 import { useState } from 'react';
-import { ArrowLeft, Send, ShieldCheck, Info, AlertCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom'; // Hook para navegación
+import { Send, ShieldCheck, Info } from 'lucide-react';
 
 // Datos simulados de la encuesta asignada (vendrían de Diego vía URL params o API)
 const SURVEY_DATA = {
@@ -17,9 +18,8 @@ const SURVEY_DATA = {
 };
 
 export default function Encuesta() {
+  const navigate = useNavigate();
   const [answers, setAnswers] = useState({});
-  const [isSubmitted, setIsSubmitted] = useState(false);
-  const [currentStep, setCurrentStep] = useState(0); // Para modo paso a paso opcional
 
   const handleAnswer = (questionId, value) => {
     setAnswers(prev => ({ ...prev, [questionId]: value }));
@@ -34,34 +34,11 @@ export default function Encuesta() {
     
     // Aquí iría la llamada al backend de Diego para guardar anónimamente
     console.log('Respuestas anónimas enviadas:', answers);
-    setIsSubmitted(true);
+    
+    // Redirección a la pantalla de confirmación separada
+    navigate('/encuesta-finalizada');
   };
 
-  // VISTA DE CONFIRMACIÓN POST-ENVÍO
-  if (isSubmitted) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center p-6">
-        <div className="bg-white rounded-3xl shadow-2xl p-10 max-w-md w-full text-center animate-in zoom-in-95 duration-300 border border-slate-100">
-          <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <ShieldCheck size={40} className="text-emerald-600" />
-          </div>
-          <h1 className="text-2xl font-bold text-slate-800 mb-3">¡Gracias por tu participación!</h1>
-          <p className="text-slate-600 mb-6 leading-relaxed">
-            Tus respuestas han sido registradas de forma <strong>100% anónima</strong>. 
-            La información será utilizada exclusivamente para mejorar el entorno laboral.
-          </p>
-          <button 
-            onClick={() => window.location.href = '/'} 
-            className="w-full py-3 bg-[#1E3A5F] text-white rounded-xl font-bold hover:bg-[#162c4a] transition-all shadow-lg active:scale-95"
-          >
-            Volver al Inicio
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // VISTA DEL CUESTIONARIO
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex flex-col">
       

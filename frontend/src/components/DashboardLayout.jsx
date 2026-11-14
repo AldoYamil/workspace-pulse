@@ -12,7 +12,10 @@ import {
   Building2,
   Users,
   LogOut,
-  UserCircle // Agregamos este ícono
+  UserCircle,
+  GraduationCap,
+  Megaphone,
+  FileText
 } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 
@@ -47,6 +50,8 @@ export default function DashboardLayout() {
     { name: 'Configuración de Alertas', path: '/admin/alertas', icon: Bell },
     { name: 'Planes de acción', path: '/admin/planes-accion', icon: ClipboardCheck },
     { name: 'Reportes de auditoría', path: '/admin/reportes-auditoria', icon: FileSearch },
+    { name: 'Capacitaciones', path: '/admin/capacitaciones', icon: GraduationCap },
+    { name: 'Campañas de Evaluación', path: '/admin/campanas-evaluacion', icon: Megaphone }
   ];
 
   return (
@@ -84,6 +89,22 @@ export default function DashboardLayout() {
             );
           })}
         </nav>
+
+        
+        <div className="mt-auto px-4 pt-4 border-t border-slate-100">
+        <Link
+          to="/admin/politicas-prevencion"
+          className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+            location.pathname === '/admin/politicas-prevencion'
+              ? 'bg-slate-100 text-slate-800'
+              : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
+          }`}
+        >
+          <FileText className="w-5 h-5" />
+          Políticas NOM-035
+        </Link>
+        </div>
+
 
         <div className="p-4 border-t border-slate-100">
           <button

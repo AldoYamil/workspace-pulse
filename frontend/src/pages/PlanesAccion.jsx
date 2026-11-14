@@ -177,7 +177,8 @@ export default function PlanesAccion() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl space-y-8 p-6">
+    // CAMBIO PRINCIPAL: Se usa space-y-6 y w-full sin max-width, igual que en las otras pantallas
+    <div className="w-full space-y-6 animate-in fade-in duration-300">
       <section className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
 
@@ -238,7 +239,8 @@ export default function PlanesAccion() {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[850px] text-left">
+          {/* Se eliminó min-w-[850px] para permitir expansión total */}
+          <table className="w-full text-left">
             <thead className="bg-slate-50 text-xs uppercase tracking-wider text-slate-500">
               <tr>
                 <th className="px-5 py-4 font-semibold">Plan de acción</th>
