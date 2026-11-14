@@ -31,4 +31,9 @@ export const alertaService = {
     const response = await api.delete(`v1/alerta-clima/delete/${id}`);
     return response.data;
   },
+
+  evaluarUmbrales: async (payload = {}) => {
+    const response = await api.post('v1/alerta-clima/evaluar/', payload);
+    return response.data;
+},
 }

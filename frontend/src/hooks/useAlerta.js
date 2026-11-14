@@ -39,6 +39,19 @@ export function useAlertas() {
     }
   };
 
+  const ejecutarEvaluacion = async (opciones = {}) => {
+    try {
+      const resumen = await alertaService.evaluarUmbrales(opciones);
+      await fetchAlertas();
+      return { success: true, data: resumen };
+    } catch (err) {
+      return {
+        success: false,
+        error: err.response?.data || err.message || 'Error al evaluar umbrales',
+      };
+    }
+  };
+
   // Crear nueva alerta
   const createAlerta = async (nuevaAlerta) => {
     try {

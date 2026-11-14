@@ -20,6 +20,18 @@ export const planesService = {
     return response.data;
   },
 
+  // PATCH /api/v1/planes-accion/<id>/
+  update: async (id, data) => {
+    const response = await api.patch(`v1/planes-accion/${id}/`, data);
+    return response.data;
+  },
+
+  // DELETE /api/v1/planes-accion/<id>/
+  delete: async (id) => {
+    const response = await api.delete(`v1/planes-accion/${id}/`);
+    return response.data;
+  },
+
   // GET / POST: Recomendaciones (catálogo o generación con IA / Groq)
   getRecomendaciones: async (params = {}) => {
     const response = await api.get('v1/planes-accion/recomendaciones/', { params });

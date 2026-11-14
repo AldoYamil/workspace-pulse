@@ -8,58 +8,36 @@ import {
   Search,
   CalendarDays,
   UserRound,
-  Sparkles,
-  ArrowUpRight,
   X,
   Loader2,
 } from 'lucide-react';
 import api from '../api/axios';
-import RecomendacionesIA from '../components/RecomendacionesIA'; // CAMBIO 1 (nuevo import)
-
-const recomendacionesIniciales = [
-  {
-    id: 1,
-    titulo: 'Fortalecer la comunicación',
-    detalle: 'Establecer reuniones breves de seguimiento y mecanismos de retroalimentación.',
-    origen: 'Comunicación organizacional',
-  },
-  {
-    id: 2,
-    titulo: 'Revisar la distribución de tareas',
-    detalle: 'Identificar cargas de trabajo desiguales y ajustar las responsabilidades.',
-    origen: 'Carga de trabajo',
-  },
-  {
-    id: 3,
-    titulo: 'Capacitar a los responsables',
-    detalle: 'Promover formación sobre liderazgo, prevención de conflictos y bienestar laboral.',
-    origen: 'Liderazgo',
-  },
-];
+import RecomendacionesIA from '../components/RecomendacionesIA';
 
 const coloresEstado = {
   Pendiente: 'bg-amber-100 text-amber-700',
-  'En progreso': 'bg-blue-100 text-blue-700',
-  Completado: 'bg-emerald-100 text-emerald-700',
+  'En Proceso': 'bg-blue-100 text-blue-700',
+  Completada: 'bg-emerald-100 text-emerald-700',
 };
 
 export default function PlanesAccion() {
   const [planes, setPlanes] = useState([]);
+  const [resumen, setResumen] = useState({ total: 0, Pendiente: 0, 'En Proceso': 0, Completada: 0 });
   const [usuarios, setUsuarios] = useState([]);
-  const [resultadosRiesgo, setResultadosRiesgo] = useState([]);
-  
+  const [areas, setAreas] = useState([]);
+
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
   const [busqueda, setBusqueda] = useState('');
   const [filtroEstado, setFiltroEstado] = useState('Todos');
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
 
-  // Estado del nuevo plan vinculado estrictamente a las FKs de la BD
   const [nuevoPlan, setNuevoPlan] = useState({
     titulo: '',
     descripcion_medida: '',
     fecha_compromiso: '',
     resultado_riesgo: '',
+    area: '',
     usuario: '',
   });
 
@@ -71,18 +49,19 @@ export default function PlanesAccion() {
     try {
       setCargando(true);
       setError('');
-      
-      // Peticiones paralelas para obtener planes, usuarios y riesgos reales
-      const [resPlanes, resUsuarios, resRiesgos] = await Promise.all([
-        api.get('v1/planeacion/list-create/'),
+
+      const [resPlanes, resUsuarios, resAreas] = await Promise.all([
+        api.get('v1/planes-accion/'),
         api.get('v1/usuario/list/').catch(() => ({ data: [] })),
-        // Si no tienes un listado general, puedes adaptarlo al endpoint de riesgos que prefieras
-        api.get('v1/resultado-riesgo/list-by-campana/1/').catch(() => ({ data: [] })) 
+        api.get('v1/planes-accion/areas/').catch(() => ({ data: [] })),
       ]);
 
-      setPlanes(resPlanes.data);
-      setUsuarios(resUsuarios.data);
-      setResultadosRiesgo(resRiesgos.data);
+      setPlanes(resPlanes.data.planes || []);
+      setResumen(
+        resPlanes.data.resumen || { total: 0, Pendiente: 0, 'En Proceso': 0, Completada: 0 }
+      );
+      setUsuarios(Array.isArray(resUsuarios.data) ? resUsuarios.data : []);
+      setAreas(Array.isArray(resAreas.data) ? resAreas.data : []);
     } catch (err) {
       console.error('Error al cargar datos:', err);
       setError('No se pudieron sincronizar los datos con el servidor.');
@@ -91,16 +70,12 @@ export default function PlanesAccion() {
     }
   };
 
-  const pendientes = planes.filter((p) => p.estado === 'Pendiente').length;
-  const enProgreso = planes.filter((p) => p.estado === 'En progreso').length;
-  const completados = planes.filter((p) => p.estado === 'Completado').length;
-
   const planesFiltrados = planes.filter((plan) => {
     const texto = busqueda.toLowerCase();
     const coincideBusqueda =
       plan.titulo.toLowerCase().includes(texto) ||
-      (plan.area_nombre && plan.area_nombre.toLowerCase().includes(texto)) ||
-      (plan.responsable_nombre && plan.responsable_nombre.toLowerCase().includes(texto));
+      (plan.area?.nombre && plan.area.nombre.toLowerCase().includes(texto)) ||
+      (plan.responsable?.nombre && plan.responsable.nombre.toLowerCase().includes(texto));
 
     const coincideEstado = filtroEstado === 'Todos' || plan.estado === filtroEstado;
     return coincideBusqueda && coincideEstado;
@@ -110,9 +85,7 @@ export default function PlanesAccion() {
     setNuevoPlan((anterior) => ({ ...anterior, [campo]: valor }));
   }
 
-  // CAMBIO 2 (función nueva): convierte una recomendación de la IA en un plan
-  // y abre tu mismo formulario ya rellenado. El responsable lo eliges tú.
-  function usarRecomendacion(recomendacion, resultadoRiesgoId) {
+  function usarRecomendacion(recomendacion, resultadoRiesgoId, areaId = '') {
     const fecha = new Date();
     fecha.setDate(fecha.getDate() + (recomendacion.plazo_dias || 30));
 
@@ -122,6 +95,7 @@ export default function PlanesAccion() {
       descripcion_medida: recomendacion.descripcion,
       fecha_compromiso: fecha.toLocaleDateString('en-CA'),
       resultado_riesgo: resultadoRiesgoId ? String(resultadoRiesgoId) : '',
+      area: areaId ? String(areaId) : '',
     }));
     setMostrarFormulario(true);
   }
@@ -129,40 +103,56 @@ export default function PlanesAccion() {
   async function crearPlan(evento) {
     evento.preventDefault();
 
-    if (!nuevoPlan.titulo.trim() || !nuevoPlan.fecha_compromiso || !nuevoPlan.resultado_riesgo || !nuevoPlan.usuario) {
-      alert('Por favor completa todos los campos obligatorios, incluyendo el área/riesgo y el responsable.');
+    if (!nuevoPlan.titulo.trim() || !nuevoPlan.fecha_compromiso || (!nuevoPlan.resultado_riesgo && !nuevoPlan.area)) {
+      alert('Por favor completa el título, fecha compromiso y el área o resultado de riesgo.');
       return;
     }
 
+    const payload = {
+      titulo: nuevoPlan.titulo.trim(),
+      descripcion_medida: nuevoPlan.descripcion_medida.trim(),
+      fecha_compromiso: nuevoPlan.fecha_compromiso,
+    };
+    if (nuevoPlan.resultado_riesgo) payload.resultado_riesgo = Number(nuevoPlan.resultado_riesgo);
+    if (nuevoPlan.area) payload.area = Number(nuevoPlan.area);
+    if (nuevoPlan.usuario) payload.usuario = Number(nuevoPlan.usuario);
+
     try {
-      await api.post('v1/planeacion/list-create/', nuevoPlan);
-      
-      // Recargamos los planes desde la BD
-      const response = await api.get('v1/planeacion/list-create/');
-      setPlanes(response.data);
+      await api.post('v1/planes-accion/', payload);
+      await cargarDatosIniciales();
 
       setNuevoPlan({
         titulo: '',
         descripcion_medida: '',
         fecha_compromiso: '',
         resultado_riesgo: '',
+        area: '',
         usuario: '',
       });
       setMostrarFormulario(false);
     } catch (err) {
+      const detalle = err.response?.data?.detail || JSON.stringify(err.response?.data || err.message);
       console.error('Error al guardar el plan:', err.response?.data || err);
-      alert('Error de validación en el servidor al guardar el plan.');
+      alert(`No se pudo guardar el plan: ${detalle}`);
     }
   }
 
   async function cambiarEstado(id, nuevoEstado) {
     try {
-      await api.put(`v1/planeacion/update-delete/${id}/`, { estado: nuevoEstado });
-      setPlanes((anteriores) =>
-        anteriores.map((p) => (p.id === id ? { ...p, estado: nuevoEstado } : p))
-      );
+      const { data: planActualizado } = await api.patch(`v1/planes-accion/${id}/`, {
+        estado: nuevoEstado,
+      });
+
+      const listaActualizada = planes.map((p) => (p.id === id ? planActualizado : p));
+      setPlanes(listaActualizada);
+      setResumen({
+        total: listaActualizada.length,
+        Pendiente: listaActualizada.filter((p) => p.estado === 'Pendiente').length,
+        'En Proceso': listaActualizada.filter((p) => p.estado === 'En Proceso').length,
+        Completada: listaActualizada.filter((p) => p.estado === 'Completada').length,
+      });
     } catch (err) {
-      console.error('Error al actualizar estado:', err);
+      console.error('Error al actualizar estado:', err.response?.data || err);
       alert('No se pudo actualizar el estado.');
     }
   }
@@ -180,11 +170,8 @@ export default function PlanesAccion() {
     <div className="mx-auto max-w-7xl space-y-8 p-6">
       <section className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-
-          <h1 className="text-3xl font-bold text-white mb-2">
-            Planes de acción
-          </h1>
-          <p className="text-slate-300 text-base">
+          <h1 className="mb-2 text-3xl font-bold text-white">Planes de acción</h1>
+          <p className="text-base text-slate-300">
             Organiza acciones preventivas, asigna responsables y da seguimiento a las medidas de bienestar laboral.
           </p>
         </div>
@@ -201,13 +188,12 @@ export default function PlanesAccion() {
       {error && <div className="rounded-xl bg-red-50 p-4 text-sm font-medium text-red-700">{error}</div>}
 
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <TarjetaResumen titulo="Total de planes" valor={planes.length} descripcion="Registrados" icono={ClipboardCheck} color="blue" />
-        <TarjetaResumen titulo="Pendientes" valor={pendientes} descripcion="Atención requerida" icono={Clock} color="amber" />
-        <TarjetaResumen titulo="En progreso" valor={enProgreso} descripcion="En ejecución" icono={AlertTriangle} color="indigo" />
-        <TarjetaResumen titulo="Completados" valor={completados} descripcion="Finalizados" icono={CheckCircle2} color="green" />
+        <TarjetaResumen titulo="Total de planes" valor={resumen.total} descripcion="Registrados" icono={ClipboardCheck} color="blue" />
+        <TarjetaResumen titulo="Pendientes" valor={resumen.Pendiente || 0} descripcion="Atención requerida" icono={Clock} color="amber" />
+        <TarjetaResumen titulo="En proceso" valor={resumen['En Proceso'] || 0} descripcion="En ejecución" icono={AlertTriangle} color="indigo" />
+        <TarjetaResumen titulo="Completadas" valor={resumen.Completada || 0} descripcion="Finalizados" icono={CheckCircle2} color="green" />
       </section>
 
-      {/* CAMBIO 3 (componente nuevo): sugerencias con IA */}
       <RecomendacionesIA onUsar={usarRecomendacion} />
 
       <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
@@ -231,8 +217,8 @@ export default function PlanesAccion() {
             >
               <option value="Todos">Todos los estados</option>
               <option value="Pendiente">Pendientes</option>
-              <option value="En progreso">En progreso</option>
-              <option value="Completado">Completados</option>
+              <option value="En Proceso">En proceso</option>
+              <option value="Completada">Completadas</option>
             </select>
           </div>
         </div>
@@ -259,7 +245,7 @@ export default function PlanesAccion() {
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-2 text-sm text-slate-600">
                       <UserRound size={16} className="text-slate-400" />
-                      {plan.responsable_nombre || 'No asignado'}
+                      {plan.responsable?.nombre || 'No asignado'}
                     </div>
                   </td>
                   <td className="px-5 py-4">
@@ -270,7 +256,7 @@ export default function PlanesAccion() {
                   </td>
                   <td className="px-5 py-4">
                     <span className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-semibold text-[#1E3A5F]">
-                      {plan.area_nombre || 'General'} ({plan.nivel_riesgo || 'N/A'})
+                      {plan.area?.nombre || 'General'} ({plan.resultado_riesgo?.nivel_riesgo || 'N/A'})
                     </span>
                   </td>
                   <td className="px-5 py-4">
@@ -285,8 +271,8 @@ export default function PlanesAccion() {
                       className="rounded-lg border border-slate-200 bg-white px-2 py-2 text-xs outline-none focus:border-[#1E3A5F]"
                     >
                       <option value="Pendiente">Pendiente</option>
-                      <option value="En progreso">En progreso</option>
-                      <option value="Completado">Completado</option>
+                      <option value="En Proceso">En Proceso</option>
+                      <option value="Completada">Completada</option>
                     </select>
                   </td>
                 </tr>
@@ -319,6 +305,7 @@ export default function PlanesAccion() {
                 <label className="mb-1.5 block text-sm font-semibold text-slate-700">Título del plan *</label>
                 <input
                   required
+                  maxLength={100}
                   value={nuevoPlan.titulo}
                   onChange={(e) => actualizarCampo('titulo', e.target.value)}
                   placeholder="Ej. Campaña de manejo de estrés"
@@ -339,14 +326,13 @@ export default function PlanesAccion() {
                 </div>
 
                 <div>
-                  <label className="mb-1.5 block text-sm font-semibold text-slate-700">Responsable (Usuario) *</label>
+                  <label className="mb-1.5 block text-sm font-semibold text-slate-700">Responsable (opcional: por defecto tú)</label>
                   <select
-                    required
                     value={nuevoPlan.usuario}
                     onChange={(e) => actualizarCampo('usuario', e.target.value)}
                     className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-[#1E3A5F]"
                   >
-                    <option value="">Selecciona un responsable</option>
+                    <option value="">Asignarme a mí</option>
                     {usuarios.map((u) => (
                       <option key={u.id} value={u.id}>{u.nombre} ({u.email})</option>
                     ))}
@@ -355,25 +341,33 @@ export default function PlanesAccion() {
               </div>
 
               <div>
-                <label className="mb-1.5 block text-sm font-semibold text-slate-700">Resultado de Riesgo / Área asociada *</label>
-                <select
-                  required
-                  value={nuevoPlan.resultado_riesgo}
-                  onChange={(e) => actualizarCampo('resultado_riesgo', e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-[#1E3A5F]"
-                >
-                  <option value="">Selecciona el indicador de riesgo</option>
-                  {/* CAMBIO 4: si el riesgo viene de una recomendación y no está en la lista, se agrega como opción */}
-                  {nuevoPlan.resultado_riesgo &&
-                    !resultadosRiesgo.some((r) => String(r.id) === String(nuevoPlan.resultado_riesgo)) && (
-                      <option value={nuevoPlan.resultado_riesgo}>
-                        Riesgo del área seleccionada (ID {nuevoPlan.resultado_riesgo})
+                <label className="mb-1.5 block text-sm font-semibold text-slate-700">Área evaluada *</label>
+                {nuevoPlan.resultado_riesgo ? (
+                  <div className="flex items-center justify-between rounded-xl border border-blue-200 bg-blue-50 px-3 py-2.5 text-sm text-[#1E3A5F]">
+                    <span>Vinculado al resultado de riesgo #{nuevoPlan.resultado_riesgo}</span>
+                    <button
+                      type="button"
+                      onClick={() => actualizarCampo('resultado_riesgo', '')}
+                      className="text-xs font-semibold underline"
+                    >
+                      Cambiar área
+                    </button>
+                  </div>
+                ) : (
+                  <select
+                    required
+                    value={nuevoPlan.area}
+                    onChange={(e) => actualizarCampo('area', e.target.value)}
+                    className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-[#1E3A5F]"
+                  >
+                    <option value="">Selecciona un área</option>
+                    {areas.map((a) => (
+                      <option key={a.id} value={a.id}>
+                        {a.centro_trabajo?.nombre ? `${a.centro_trabajo.nombre} — ` : ''}{a.nombre}
                       </option>
-                    )}
-                  {resultadosRiesgo.map((r) => (
-                    <option key={r.id} value={r.id}>ID Riesgo: {r.id} - Nivel: {r.nivel_riesgo} (Puntuación: {r.puntuacion_riesgo})</option>
-                  ))}
-                </select>
+                    ))}
+                  </select>
+                )}
               </div>
 
               <div>
