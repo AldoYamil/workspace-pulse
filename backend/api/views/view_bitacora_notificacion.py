@@ -7,7 +7,8 @@ from django.contrib.auth.models import User
 
 from api.serializers import bitacora_notificacion_serializer
 from api.models.bitacora_notificacion_model import Bitacora_notificacion
-from api.models.campana_evaluacion_model import Usuario
+from api.models.campana_evaluacion_model import Campana_evaluacion
+from api.models.usuario_model import Usuario
 
 ##CREATE
 class CreateBitacoraNotificacionApiView(generics.CreateAPIView):

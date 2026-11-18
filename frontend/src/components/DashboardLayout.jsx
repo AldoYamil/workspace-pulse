@@ -1,5 +1,5 @@
-import { Outlet, Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
-import { useState } from 'react'; // Asegúrate de importar useState
+import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
+import { useState } from 'react';
 import {
   ShieldAlert,
   ClipboardList,
@@ -15,7 +15,8 @@ import {
   UserCircle,
   GraduationCap,
   Megaphone,
-  FileText
+  QrCode,
+  FileText,
 } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 
@@ -51,7 +52,8 @@ export default function DashboardLayout() {
     { name: 'Planes de acción', path: '/admin/planes-accion', icon: ClipboardCheck },
     { name: 'Reportes de auditoría', path: '/admin/reportes-auditoria', icon: FileSearch },
     { name: 'Capacitaciones', path: '/admin/capacitaciones', icon: GraduationCap },
-    { name: 'Campañas de Evaluación', path: '/admin/campanas-evaluacion', icon: Megaphone }
+    { name: 'Campañas de Evaluación', path: '/admin/campanas-evaluacion', icon: Megaphone },
+    { name: 'Generador de QR', path: '/admin/touchpointqr', icon: QrCode },
   ];
 
   return (

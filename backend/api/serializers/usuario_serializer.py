@@ -6,7 +6,7 @@ from .centro_trabajo_serializer import DetailCentroTrabajoSerializer
 
 EMAIL_REGEX = r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$'
 
-ROLES_PERMITIDOS = ["admin", "evaluador"]
+ROLES_PERMITIDOS = ["administrador", "empleado", "supervisor"]
 
 
 ## CRUD USUARIO

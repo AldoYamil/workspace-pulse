@@ -1,54 +1,84 @@
 // src/pages/OrgManagement.jsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Building2, Users, MapPin, Plus, Search, 
   Edit2, Trash2, CheckCircle2, XCircle, Loader2 
 } from 'lucide-react';
+import { supabase } from '../lib/supabaseClient'; 
 import { useCentrosTrabajo } from '../hooks/useCentrosTrabajo';
 import { useAreas } from '../hooks/useAreas';
 import { useUsuarios } from '../hooks/useUsuarios';
 
 export default function OrgManagement() {
-  const [activeTab, setActiveTab] = useState('sedes'); // 'sedes' | 'deptos' | 'empleados'
+  const [activeTab, setActiveTab] = useState('sedes');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   
-  // Custom Hooks para API Real
+  const [currentEmpresaId, setCurrentEmpresaId] = useState(null);
+
   const { centros, loading: loadingCentros, error: errorCentros, createCentro, deleteCentro } = useCentrosTrabajo();
   const { areas, loading: loadingAreas, error: errorAreas, createArea, deleteArea } = useAreas();
   const { usuarios, loading: loadingUsuarios, error: errorUsuarios, createUsuario, deleteUsuario } = useUsuarios();
 
-  // Estados de formularios
   const [formSede, setFormSede] = useState({ nombre: '', direccion: '', num_empleados: 0, codigo_postal: '' });
   const [formDepto, setFormDepto] = useState({ nombre: '', descripcion: '', centro_trabajo: '' });
-  const [formEmpleado, setFormEmpleado] = useState({ nombre: '', email: '', rol: '', centro_trabajo: '', area: '' });
+  const [formEmpleado, setFormEmpleado] = useState({ nombre: '', email: '', password_hash: '', rol: '', centro_trabajo: '', area: '' });
 
   const [formError, setFormError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
-  // Abrir Modal Limpio
+  useEffect(() => {
+    const fetchEmpresaUsuario = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const empId = user.user_metadata?.empresa_id || user.user_metadata?.empresa || 1;
+          setCurrentEmpresaId(empId);
+        }
+      } catch (err) {
+        console.error("Error al obtener sesión de usuario en Supabase:", err);
+      }
+    };
+
+    fetchEmpresaUsuario();
+  }, []);
+
   const handleOpenModal = () => {
     setFormError(null);
     setIsModalOpen(true);
   };
 
-  // Manejador centralizado para guardar registros según la pestaña activa
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
     setFormError(null);
 
     let result = { success: false };
+    const empresaIdAEnviar = currentEmpresaId || 1; 
 
     if (activeTab === 'sedes') {
-      result = await createCentro(formSede);
+      const payload = {
+        ...formSede,
+        empresa: empresaIdAEnviar
+      };
+      result = await createCentro(payload);
       if (result.success) setFormSede({ nombre: '', direccion: '', num_empleados: 0, codigo_postal: '' });
+
     } else if (activeTab === 'deptos') {
-      result = await createArea(formDepto);
+      const payload = {
+        ...formDepto,
+        empresa: empresaIdAEnviar
+      };
+      result = await createArea(payload);
       if (result.success) setFormDepto({ nombre: '', descripcion: '', centro_trabajo: '' });
+
     } else if (activeTab === 'empleados') {
-      result = await createUsuario(formEmpleado);
-      if (result.success) setFormEmpleado({ nombre: '', email: '', rol: '', centro_trabajo: '', area: '' });
+      const payload = {
+        ...formEmpleado,
+        empresa: empresaIdAEnviar
+      };
+      result = await createUsuario(payload);
+      if (result.success) setFormEmpleado({ nombre: '', email: '', password: '', rol: '', centro_trabajo: '', area: '' });
     }
 
     if (result.success) {
@@ -59,7 +89,6 @@ export default function OrgManagement() {
     setSubmitting(false);
   };
 
-  // Eliminar registro activo
   const handleDelete = async (id) => {
     if (!window.confirm('¿Desea eliminar este registro?')) return;
 
@@ -73,7 +102,6 @@ export default function OrgManagement() {
     }
   };
 
-  // Helper para renderizar mensajes de error del backend ordenadamente
   const renderErrorBox = () => {
     if (!formError) return null;
     return (
@@ -204,14 +232,11 @@ export default function OrgManagement() {
                     <td className="px-6 py-4 font-mono text-xs text-slate-400">#{item.id}</td>
                     <td className="px-6 py-4 font-medium text-slate-800">{item.nombre}</td>
                     <td className="px-6 py-4 text-slate-600">{item.descripcion || 'Sin descripción'}</td>
-
-                    {/* CORRECCIÓN AQUÍ: extraer .nombre si centro_trabajo es un objeto */}
                     <td className="px-6 py-4 text-slate-600">
                       {typeof item.centro_trabajo === 'object' 
                         ? item.centro_trabajo?.nombre 
                         : (item.centro_trabajo_nombre || item.centro_trabajo || 'N/A')}
                     </td>
-
                     <td className="px-6 py-4 text-right">
                       <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button className="p-2 text-slate-400 hover:text-[#1E3A5F] hover:bg-blue-50 rounded-lg transition-colors"><Edit2 size={16}/></button>
@@ -229,7 +254,11 @@ export default function OrgManagement() {
                     <td className="px-6 py-4 font-mono text-xs text-slate-400">#{item.id}</td>
                     <td className="px-6 py-4 font-medium text-slate-800">{item.nombre}</td>
                     <td className="px-6 py-4 text-slate-600">{item.email}</td>
-                    <td className="px-6 py-4 text-slate-600">{item.area_nombre || item.area || 'N/A'}</td>
+                    <td className="px-6 py-4 text-slate-600">
+                      {typeof item.area === 'object' 
+                        ? item.area?.nombre 
+                        : (item.area_nombre || item.area || 'N/A')}
+                    </td>
                     <td className="px-6 py-4 text-slate-600">{item.rol || 'Colaborador'}</td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -396,6 +425,28 @@ export default function OrgManagement() {
                       />
                     </div>
                     <div>
+                      <label className="block text-xs font-bold uppercase text-slate-500 mb-1">Contraseña</label>
+                      <input 
+                        type="password" required value={formEmpleado.password_hash}
+                        onChange={(e) => setFormEmpleado({ ...formEmpleado, password_hash: e.target.value })}
+                        className="w-full border p-2.5 rounded-xl text-sm border-slate-200 focus:outline-none focus:border-[#1E3A5F]"
+                        placeholder="••••••••"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold uppercase text-slate-500 mb-1">Rol en el Sistema</label>
+                      <select 
+                        required value={formEmpleado.rol}
+                        onChange={(e) => setFormEmpleado({ ...formEmpleado, rol: e.target.value })}
+                        className="w-full border p-2.5 rounded-xl text-sm border-slate-200 focus:outline-none focus:border-[#1E3A5F]"
+                      >
+                        <option value="">Seleccione un Rol...</option>
+                        <option value="empleado">Empleado</option>
+                        <option value="administrador">Administrador</option>
+                        <option value="supervisor">Supervisor</option>
+                      </select>
+                    </div>
+                    <div>
                       <label className="block text-xs font-bold uppercase text-slate-500 mb-1">Centro de Trabajo</label>
                       <select 
                         required value={formEmpleado.centro_trabajo}
@@ -405,19 +456,6 @@ export default function OrgManagement() {
                         <option value="">Seleccione un Centro...</option>
                         {centros.map((c) => (
                           <option key={c.id} value={c.id}>{c.nombre}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold uppercase text-slate-500 mb-1">Área / Departamento</label>
-                      <select 
-                        required value={formEmpleado.area}
-                        onChange={(e) => setFormEmpleado({ ...formEmpleado, area: e.target.value })}
-                        className="w-full border p-2.5 rounded-xl text-sm border-slate-200 focus:outline-none focus:border-[#1E3A5F]"
-                      >
-                        <option value="">Seleccione un Área...</option>
-                        {areas.map((a) => (
-                          <option key={a.id} value={a.id}>{a.nombre}</option>
                         ))}
                       </select>
                     </div>

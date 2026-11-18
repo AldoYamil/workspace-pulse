@@ -8,7 +8,7 @@ from django.contrib.auth.models import User
 from api.serializers import capacitacion_serializer
 from api.models.capacitacion_model import Capacitacion
 from api.models.planeacion_model import Planeacion
-from api.models.centro_trabajo_model import CentroTrabajo
+from api.models.centro_trabajo_model import Centro_trabajo
 
 ##CREATE
 class CreateCapacitacionApiView(generics.CreateAPIView):

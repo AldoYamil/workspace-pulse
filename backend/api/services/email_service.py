@@ -6,7 +6,7 @@ from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
-CORREO_ADMIN_PRUEBAS = "diegoxd1y2compu@gmail.com"
+CORREO_ADMIN_PRUEBAS = "aldoyamil30@gmail.com"
 
 def enviar_correo(destinatarios, asunto, html, texto=None):
     if not settings.RESEND_API_KEY:

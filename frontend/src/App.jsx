@@ -2,7 +2,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 
 import DashboardLayout from './components/DashboardLayout';
-import ProtectedRoute from './components/ProtectedRoute';
 
 import LandingPage from './pages/LandingPage';
 import Login from './pages/Login';
@@ -20,9 +19,10 @@ import Encuesta from './pages/Encuesta';
 import NotFound from './pages/NotFound';
 import Unauthorized from './pages/Unauthorized';
 import EncuestaFinalizada from './pages/EncuestaFinalizada';
-import Capacitaciones from './pages/Capacitaciones'
+import Capacitaciones from './pages/Capacitaciones';
 import CampanasEvaluacion from './pages/CampanasEvaluacion';
 import PoliticasPrevencion from './pages/PoliticasPrevencion';
+import TouchpointsQR from './pages/TouchpointsQR';
 
 export default function App() {
   return (
@@ -30,16 +30,12 @@ export default function App() {
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<Login />} />
-         <Route path="/encuesta" element={<Encuesta />} /> 
+        <Route path="/encuesta" element={<Encuesta />} />
+        <Route path="/encuesta-finalizada" element={<EncuestaFinalizada />} />
+        <Route path="/unauthorized" element={<Unauthorized />} />
 
-         <Route path="*" element={<NotFound />} />
-         <Route path="/unauthorized" element={<Unauthorized />} />
-         <Route path="/encuesta-finalizada" element={<EncuestaFinalizada />} />
-
-        
         <Route path="/admin" element={<DashboardLayout />}>
           <Route index element={<Navigate to="/admin/dashboard" replace />} />
-          
           <Route path="perfil" element={<UserProfile />} />
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="organizacion" element={<OrgManagement />} />
@@ -52,8 +48,10 @@ export default function App() {
           <Route path="capacitaciones" element={<Capacitaciones />} />
           <Route path="campanas-evaluacion" element={<CampanasEvaluacion />} />
           <Route path="politicas-prevencion" element={<PoliticasPrevencion />} />
-
+          <Route path="touchpointqr" element={<TouchpointsQR />} />
         </Route>
+
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
   );

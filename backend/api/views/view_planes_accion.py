@@ -1,11 +1,3 @@
-# backend/api/views/view_planes_accion.py
-#
-# GET   /api/v1/planes-accion/                  -> lista de planes + resumen por estado
-# POST  /api/v1/planes-accion/                  -> crea un plan
-# PATCH /api/v1/planes-accion/<id>/             -> cambia estado, responsable, fecha, etc.
-# POST  /api/v1/planes-accion/recomendaciones/  -> recomendaciones de IA (Groq) para un área
-# GET   /api/v1/planes-accion/areas/            -> áreas de tu empresa (para el selector)
-
 from django.apps import apps
 from rest_framework import serializers, status
 from rest_framework.permissions import IsAuthenticated
