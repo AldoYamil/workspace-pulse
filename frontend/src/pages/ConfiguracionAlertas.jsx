@@ -1,6 +1,7 @@
 // src/pages/ConfiguracionAlertas.jsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import EvaluarAlertas from '../components/EvaluarAlertas';
+import api from '../api/axios';
 
 export default function ConfiguracionAlertas() {
   // Estados del formulario
@@ -8,23 +9,81 @@ export default function ConfiguracionAlertas() {
   const [riesgo, setRiesgo] = useState('70');
   const [notificaciones, setNotificaciones] = useState(true);
   const [correo, setCorreo] = useState('');
+  
+  // Estados para datos reales de la BD
+  const [centrosTrabajo, setCentrosTrabajo] = useState([]);
+  const [areas, setAreas] = useState([]);
+  const [centroSeleccionado, setCentroSeleccionado] = useState('');
+  const [areaSeleccionada, setAreaSeleccionada] = useState('');
+
   const [mensaje, setMensaje] = useState('');
+  const [cargando, setCargando] = useState(false);
 
-  // Función para guardar la configuración
-  const handleSubmit = (e) => {
+  // Cargar centros de trabajo reales al montar el componente
+  useEffect(() => {
+    async function cargarDatosIniciales() {
+      try {
+        const respuestaCentros = await api.get('v1/centrotrabajo/list/');
+        if (respuestaCentros.data && respuestaCentros.data.length > 0) {
+          setCentrosTrabajo(respuestaCentros.data);
+          setCentroSeleccionado(respuestaCentros.data[0].id);
+        }
+      } catch (error) {
+        console.error('Error al cargar centros de trabajo:', error);
+      }
+    }
+    cargarDatosIniciales();
+  }, []);
+
+  // Cargar áreas cuando cambie el centro de trabajo seleccionado
+  useEffect(() => {
+    async function cargarAreasPorCentro() {
+      if (!centroSeleccionado) return;
+      try {
+        const respuestaAreas = await api.get(`v1/area/by-centro/${centroSeleccionado}/`);
+        setAreas(respuestaAreas.data);
+        if (respuestaAreas.data.length > 0) {
+          setAreaSeleccionada(respuestaAreas.data[0].id);
+        } else {
+          setAreaSeleccionada('');
+        }
+      } catch (error) {
+        console.error('Error al cargar áreas:', error);
+      }
+    }
+    cargarAreasPorCentro();
+  }, [centroSeleccionado]);
+
+  // Función para guardar la configuración real en Django
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!centroSeleccionado || !areaSeleccionada) {
+      setMensaje('Debes seleccionar un Centro de Trabajo y un Área.');
+      return;
+    }
 
-    const configuracion = {
-      satisfaccionMinima: Number(satisfaccion),
-      riesgoMaximo: Number(riesgo),
-      notificaciones,
-      correo: notificaciones ? correo.trim() : '',
-    };
+    setCargando(true);
+    setMensaje('');
 
-    console.log('Configuración de alertas:', configuracion);
+    try {
+      const payload = {
+        metrica: 'Riesgo Psicosocial / Satisfacción',
+        valor_minimo_aceptable: Number(riesgo),
+        centro_trabajo: Number(centroSeleccionado),
+        area: Number(areaSeleccionada),
+        // Campo preparado para cuando el backend almacene o use este correo (Resend)
+        correo_responsable: notificaciones ? correo.trim() : ''
+      };
 
-    // Temporal: después se conectará con Django
-    setMensaje('Configuración preparada correctamente (modo demostración).');
+      await api.post('v1/configuracionumbral/create/', payload);
+      
+      setMensaje('¡Configuración guardada correctamente en la base de datos!');
+    } catch (error) {
+      console.error('Error al guardar la configuración:', error);
+      setMensaje('Hubo un error al guardar la configuración en el servidor.');
+    } finally {
+      setCargando(false);
+    }
   };
 
   return (
@@ -44,7 +103,53 @@ export default function ConfiguracionAlertas() {
         {/* FORMULARIO */}
         <form onSubmit={handleSubmit} className="px-8 pb-10 space-y-6">
 
-          {/* SECCIÓN 1: UMBRALES */}
+          {/* SECCIÓN 1: UBICACIÓN */}
+          <div className="space-y-5">
+            <div className="border-b border-slate-200 pb-3">
+              <h2 className="text-lg font-bold text-[#1E293B]">
+                Ubicación organizacional
+              </h2>
+              <p className="mt-1 text-sm text-slate-500">
+                Selecciona el centro de trabajo y área a aplicar el umbral.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1.5">Centro de trabajo</label>
+                <select
+                  value={centroSeleccionado}
+                  onChange={(e) => setCentroSeleccionado(e.target.value)}
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]"
+                  required
+                >
+                  {centrosTrabajo.map((centro) => (
+                    <option key={centro.id} value={centro.id}>{centro.nombre}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1.5">Área</label>
+                <select
+                  value={areaSeleccionada}
+                  onChange={(e) => setAreaSeleccionada(e.target.value)}
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]"
+                  required
+                >
+                  {areas.length > 0 ? (
+                    areas.map((area) => (
+                      <option key={area.id} value={area.id}>{area.nombre}</option>
+                    ))
+                  ) : (
+                    <option value="">No hay áreas disponibles</option>
+                  )}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* SECCIÓN 2: UMBRALES */}
           <div className="space-y-5">
             <div className="border-b border-slate-200 pb-3">
               <h2 className="text-lg font-bold text-[#1E293B]">
@@ -55,12 +160,8 @@ export default function ConfiguracionAlertas() {
               </p>
             </div>
 
-            {/* Campo Satisfacción */}
             <div>
-              <label
-                htmlFor="satisfaccion"
-                className="block text-sm font-semibold text-slate-700 mb-1.5"
-              >
+              <label htmlFor="satisfaccion" className="block text-sm font-semibold text-slate-700 mb-1.5">
                 Satisfacción mínima (%)
               </label>
               <input
@@ -70,27 +171,14 @@ export default function ConfiguracionAlertas() {
                 max="100"
                 step="1"
                 value={satisfaccion}
-                onChange={(e) => {
-                  setSatisfaccion(e.target.value);
-                  setMensaje('');
-                }}
+                onChange={(e) => { setSatisfaccion(e.target.value); setMensaje(''); }}
                 required
-                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg 
-                           text-slate-800 placeholder-slate-400
-                           focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] focus:border-transparent 
-                           transition-all duration-200 ease-in-out"
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]"
               />
-              <p className="mt-2 text-xs text-slate-500">
-                Se generará una alerta si la satisfacción es menor al valor establecido.
-              </p>
             </div>
 
-            {/* Campo Riesgo */}
             <div>
-              <label
-                htmlFor="riesgo"
-                className="block text-sm font-semibold text-slate-700 mb-1.5"
-              >
+              <label htmlFor="riesgo" className="block text-sm font-semibold text-slate-700 mb-1.5">
                 Riesgo máximo permitido (%)
               </label>
               <input
@@ -100,34 +188,24 @@ export default function ConfiguracionAlertas() {
                 max="100"
                 step="1"
                 value={riesgo}
-                onChange={(e) => {
-                  setRiesgo(e.target.value);
-                  setMensaje('');
-                }}
+                onChange={(e) => { setRiesgo(e.target.value); setMensaje(''); }}
                 required
-                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg 
-                           text-slate-800 placeholder-slate-400
-                           focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] focus:border-transparent 
-                           transition-all duration-200 ease-in-out"
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]"
               />
-              <p className="mt-2 text-xs text-slate-500">
-                Se generará una alerta cuando el riesgo supere este porcentaje.
-              </p>
             </div>
           </div>
 
-          {/* SECCIÓN 2: NOTIFICACIONES */}
+          {/* SECCIÓN 3: NOTIFICACIONES Y CORREO */}
           <div className="space-y-5">
             <div className="border-b border-slate-200 pb-3">
               <h2 className="text-lg font-bold text-[#1E293B]">
                 Notificaciones por correo
               </h2>
               <p className="mt-1 text-sm text-slate-500">
-                Configura el envío de alertas a Recursos Humanos.
+                Configura el envío de alertas automáticas para Recursos Humanos.
               </p>
             </div>
 
-            {/* Activar o desactivar notificaciones */}
             <label className="flex items-center justify-between gap-4 p-4 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer">
               <div>
                 <p className="text-sm font-semibold text-slate-700">
@@ -148,7 +226,6 @@ export default function ConfiguracionAlertas() {
               />
             </label>
 
-            {/* Campo Correo */}
             {notificaciones && (
               <div>
                 <label
@@ -167,10 +244,7 @@ export default function ConfiguracionAlertas() {
                   }}
                   placeholder="recursoshumanos@empresa.com"
                   required
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg 
-                             text-slate-800 placeholder-slate-400
-                             focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] focus:border-transparent 
-                             transition-all duration-200 ease-in-out"
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]"
                 />
               </div>
             )}
@@ -188,20 +262,16 @@ export default function ConfiguracionAlertas() {
           {/* BOTÓN PRINCIPAL */}
           <button
             type="submit"
-            className="w-full mt-4 bg-[#1E3A5F] hover:bg-[#172A47] text-white 
-                       font-bold py-3 rounded-lg shadow-md hover:shadow-lg 
-                       transform hover:-translate-y-0.5 transition-all duration-200
-                       focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#1E3A5F]"
+            disabled={cargando}
+            className="w-full mt-4 bg-[#1E3A5F] hover:bg-[#172A47] text-white font-bold py-3 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-50 cursor-pointer"
           >
-            Guardar configuración
+            {cargando ? 'Guardando...' : 'Guardar configuración'}
           </button>
 
         </form>
 
-        {/* EVALUACIÓN DE ALERTAS (llama al backend, que envía los correos con Resend) */}
         <EvaluarAlertas />
 
-        {/* FOOTER LEGAL */}
         <div className="bg-slate-50 px-8 py-4 border-t border-slate-100 text-center">
           <p className="text-xs text-slate-400 font-medium">
             © 2026 WorkSpace Pulse · Cumplimiento NOM-035-STPS-2018

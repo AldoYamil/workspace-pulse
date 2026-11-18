@@ -45,7 +45,7 @@ export default function RecomendacionesIA({ onUsar }) {
   const [resultado, setResultado] = useState(null);
   const [error, setError] = useState('');
 
-  // Áreas de la empresa (endpoint propio de planes de acción, filtrado por empresa)
+  // areas de la empresa (endpoint propio de planes de acción, filtrado por empresa)
   useEffect(() => {
     api
       .get('v1/planes-accion/areas/')

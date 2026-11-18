@@ -6,7 +6,7 @@ from rest_framework import generics
 from django.contrib.auth.models import User
 
 from api.serializers import guia_referencia_serializer
-from api.models.giua_referencia_model import Guia_referencia
+from api.models.guia_referencia_model import Guia_referencia
 
 ##CREATE
 class CreateGuiaReferenciaApiView(generics.CreateAPIView):

@@ -15,6 +15,9 @@ import CuestionarioActivo from './pages/CuestionarioActivo';
 import PanelRiesgos from './pages/PanelRiesgos';
 import PlanesAccion from './pages/PlanesAccion';
 import ReportesAuditoria from './pages/ReportesAuditoria';
+import UserProfile from './pages/UserProfile';
+import Encuesta from './pages/Encuesta';
+import QR from './pages/TouchpointsQR'
 
 export default function App() {
   return (
@@ -22,23 +25,22 @@ export default function App() {
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<Login />} />
+         <Route path="/encuesta" element={<Encuesta />} /> 
 
-        <Route element={<ProtectedRoute />}>
-          <Route path="/admin" element={<DashboardLayout />}>
-            <Route
-              index
-              element={<Navigate to="/admin/dashboard" replace />}
-            />
-
-            <Route path="dashboard" element={<AdminDashboard />} />
-            <Route path="organizacion" element={<OrgManagement />} />
-            <Route path="encuestas-aplicadas" element={<AppliedSurveys />} />
-            <Route path="cuestionario" element={<CuestionarioActivo />} />
-            <Route path="riesgos" element={<PanelRiesgos />} />
-            <Route path="alertas" element={<ConfiguracionAlertas />} />
-            <Route path="planes-accion" element={<PlanesAccion />} />
-            <Route path="reportes-auditoria" element={<ReportesAuditoria />} />
-          </Route>
+        <Route path="/admin" element={<DashboardLayout />}>
+          <Route index element={<Navigate to="/admin/dashboard" replace />} />
+          
+          <Route path="perfil" element={<UserProfile />} />
+          <Route path="dashboard" element={<AdminDashboard />} />
+          <Route path="organizacion" element={<OrgManagement />} />
+          <Route path="encuestas-aplicadas" element={<AppliedSurveys />} />
+          
+          <Route path="cuestionario" element={<CuestionarioActivo />} />
+          <Route path="riesgos" element={<PanelRiesgos />} />
+          <Route path="alertas" element={<ConfiguracionAlertas />} />
+          <Route path="planes-accion" element={<PlanesAccion />} />
+          <Route path="reportes-auditoria" element={<ReportesAuditoria />} />
+          <Route path="touchpointqr" element={<QR/>}/>
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

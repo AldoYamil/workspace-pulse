@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from api.models.campana_evaluacion_model import Campana_evaluacion
 from .guia_referencia_serializer import DetailGuiaReferenciaSerializer
-from .centro_trabajo_serializer import DetailCentroTrabajoSerializer  # Se recomienda Detail en lugar de Delete para lectura
+from .centro_trabajo_serializer import DetailCentroTrabajoSerializer  
 
 
 ## CRUD CAMPAÑA EVALUACIÓN

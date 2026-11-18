@@ -9,7 +9,7 @@ from .centro_trabajo_model import *
 from .configuracion_umbral_model import *
 from .detalle_respuesta_model import *
 from .empresa_model import *
-from .giua_referencia_model import *
+from .guia_referencia_model import *
 from .integracion_tercero_model import *
 from .metrica_rendimiento_rh_model import *
 from .planeacion_model import *

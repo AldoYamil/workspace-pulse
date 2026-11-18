@@ -30,7 +30,7 @@ class SupabaseAuthentication(BaseAuthentication):
             payload = jwt.decode(
                 token,
                 signing_key.key,
-                algorithms=['ES256'],
+                algorithms=['HS256', 'RS256', 'ES256'],
                 audience='authenticated',
                 leeway=5,
                 options={'require': ['exp', 'sub']},
