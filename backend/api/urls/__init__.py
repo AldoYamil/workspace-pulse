@@ -27,4 +27,5 @@ urlpatterns = [
     path('', include('api.urls.urls_respuesta_evaluacion')),
     path('', include('api.urls.urls_resultado_riesgo')),
     path('', include('api.urls.urls_touchpoint')),
+    path('', include('api.urls.urls_campana_evaluacion')),
 ]

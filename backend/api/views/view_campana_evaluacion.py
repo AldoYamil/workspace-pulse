@@ -18,24 +18,21 @@ class CreateCampanaEvaluacionApiView(generics.CreateAPIView):
     queryset = Campana_evaluacion.objects.all()
     serializer_class = campana_evaluacion_serializer.CreateCampanaEvaluacionSerializer
 
+    def perform_create(self, serializer):
+        campana = serializer.save()
+        notificar_nueva_campana(campana)
+
 ##READ
 
 ##List
 class ListCampanaEvaluacionApiView(APIView):
-    def get(self, request):
-        guia_id = request.query_params.get('guia_id')
-        centro_id = request.query_params.get('centro_id')
-        
-        if not guia_id or not centro_id:
-            return Response(
-                {"error": "El parámetro 'guia_id' o 'centro_id' es requerido."}, 
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-            
-        campana = Campana_evaluacion.objects.filter(guia_referencia_id=guia_id, centro_trabajo=centro_id)
-        data = campana_evaluacion_serializer.ListCampanaEvaluacionSerializer(campana, many=True).data
-        return Response(data, status=status.HTTP_200_OK)
+    def get(self, request, guia_id, centro_id):
+        campanas = Campana_evaluacion.objects.filter(
+            guia_referencia_id=guia_id,
+            centro_trabajo_id=centro_id,
+        )
+        serializer = campana_evaluacion_serializer.ListCampanaEvaluacionSerializer(campanas, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
     
 ##Detail
 class DetailCampanaEvaluacionApiView(APIView):
