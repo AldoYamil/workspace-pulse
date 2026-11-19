@@ -144,10 +144,11 @@ export default function Encuesta() {
       {/* BARRA SUPERIOR MINIMALISTA */}
       <header className="bg-white/80 backdrop-blur-md border-b border-slate-200 px-6 py-4 flex items-center justify-between sticky top-0 z-10">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-[#1E3A5F] rounded-lg flex items-center justify-center text-white">
-            <ShieldCheck size={18} />
+          {/* LOGO ACTUALIZADO PARA COINCIDIR CON DASHBOARDLAYOUT */}
+          <div className="w-10 h-10 bg-[#1E3A5F] rounded-xl flex items-center justify-center text-white shadow-md">
+            <Activity className="w-6 h-6" />
           </div>
-          <span className="font-bold text-slate-800 tracking-tight">WorkSpace Pulse</span>
+          <span className="font-bold text-slate-800 tracking-tight text-lg">WorkSpace Pulse</span>
         </div>
         <div className="flex items-center gap-2 text-xs font-medium text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-100">
           <ShieldCheck size={14} />

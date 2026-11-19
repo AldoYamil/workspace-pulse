@@ -167,7 +167,8 @@ export default function PlanesAccion() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl space-y-8 p-6">
+    // CAMBIO PRINCIPAL: Se usa space-y-6 y w-full sin max-width, igual que en las otras pantallas
+    <div className="w-full space-y-6 animate-in fade-in duration-300">
       <section className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
           <h1 className="mb-2 text-3xl font-bold text-white">Planes de acción</h1>
@@ -224,7 +225,8 @@ export default function PlanesAccion() {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[850px] text-left">
+          {/* Se eliminó min-w-[850px] para permitir expansión total */}
+          <table className="w-full text-left">
             <thead className="bg-slate-50 text-xs uppercase tracking-wider text-slate-500">
               <tr>
                 <th className="px-5 py-4 font-semibold">Plan de acción</th>
@@ -398,24 +400,26 @@ export default function PlanesAccion() {
   );
 }
 
+// --- DISEÑO ACTUALIZADO DE LAS TARJETAS KPI ---
 function TarjetaResumen({ titulo, valor, descripcion, icono: Icono, color }) {
-  const estilos = {
-    blue: 'bg-blue-50 text-blue-700',
-    amber: 'bg-amber-50 text-amber-700',
-    indigo: 'bg-indigo-50 text-indigo-700',
-    green: 'bg-emerald-50 text-emerald-700',
+  // Mapeo de colores para el fondo del icono (manteniendo la semántica pero adaptando al estilo oscuro/transparente)
+  const estilosIcono = {
+    blue: 'bg-blue-500/20 text-blue-300',
+    amber: 'bg-amber-500/20 text-amber-300',
+    indigo: 'bg-indigo-500/20 text-indigo-300',
+    green: 'bg-emerald-500/20 text-emerald-300',
   };
+
   return (
-    <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-sm font-medium text-slate-500">{titulo}</p>
-          <p className="mt-3 text-3xl font-bold tracking-tight text-slate-900">{valor}</p>
-          <p className="mt-1 text-xs text-slate-400">{descripcion}</p>
-        </div>
-        <div className={`flex h-11 w-11 items-center justify-center rounded-xl ${estilos[color] || estilos.blue}`}>
-          <Icono size={21} />
-        </div>
+    <article className="bg-white/10 backdrop-blur-md border border-white/10 p-4 rounded-xl flex items-center gap-4">
+      <div className={`p-3 rounded-lg ${estilosIcono[color] || estilosIcono.blue}`}>
+        <Icono size={24} />
+      </div>
+      <div>
+        <p className="text-slate-300 text-sm">{titulo}</p>
+        <p className="text-2xl font-bold text-white">{valor}</p>
+        {/* Opcional: si quieres mostrar la descripción pequeña como en el original, puedes descomentar la siguiente línea */}
+        {/* <p className="text-xs text-slate-400 mt-0.5">{descripcion}</p> */}
       </div>
     </article>
   );
