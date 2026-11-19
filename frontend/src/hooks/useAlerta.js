@@ -13,7 +13,6 @@ export function useAlertas() {
     setError(null);
     try {
       const data = await alertaService.getAll();
-      // Soporta respuestas paginadas de DRF ({ results: [...] }) o arreglos directos
       setAlertas(Array.isArray(data) ? data : data?.results || []);
     } catch (err) {
       setError(err.response?.data || err.message || 'Error al cargar las alertas');
@@ -39,6 +38,7 @@ export function useAlertas() {
     }
   };
 
+  // Evaluar umbrales en el backend
   const ejecutarEvaluacion = async (opciones = {}) => {
     try {
       const resumen = await alertaService.evaluarUmbrales(opciones);
@@ -48,6 +48,7 @@ export function useAlertas() {
       return {
         success: false,
         error: err.response?.data || err.message || 'Error al evaluar umbrales',
+        rawError: err, // Mantiene el error original de Axios para describirError
       };
     }
   };
@@ -56,7 +57,7 @@ export function useAlertas() {
   const createAlerta = async (nuevaAlerta) => {
     try {
       const created = await alertaService.create(nuevaAlerta);
-      await fetchAlertas(); // Recarga la lista actualizada desde el backend
+      await fetchAlertas();
       return { success: true, data: created };
     } catch (err) {
       return {
@@ -100,6 +101,7 @@ export function useAlertas() {
     error,
     fetchAlertas,
     getAlertaById,
+    ejecutarEvaluacion,
     createAlerta,
     updateAlerta,
     deleteAlerta,
