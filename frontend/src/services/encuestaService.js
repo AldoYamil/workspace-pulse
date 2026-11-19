@@ -92,10 +92,11 @@ export const encuestaService = {
     return data;
   },
 
-  getEncuestaPublica: async ({ token, campana, area } = {}) => {
+  getEncuestaPublica: async ({ token, guia, campana, area } = {}) => {
     const { data } = await api.get('v1/encuesta-publica/', {
       params: {
         token: token || undefined,
+        guia: guia || undefined,
         campana: campana || undefined,
         area: area || undefined,
       },

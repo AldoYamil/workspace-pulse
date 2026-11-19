@@ -7,6 +7,18 @@ from .centro_trabajo_serializer import DetailCentroTrabajoSerializer
 ## CRUD CAMPAÑA EVALUACIÓN
 
 ## CREATE
+def _normalizar_estado(validated_data):
+    if "estado" in validated_data and isinstance(validated_data["estado"], str):
+        validated_data["estado"] = validated_data["estado"].strip().lower() in (
+            "activa",
+            "activo",
+            "true",
+            "1",
+            "si",
+            "sí",
+        )
+    return validated_data
+
 class CreateCampanaEvaluacionSerializer(serializers.ModelSerializer):
     nombre = serializers.CharField(
         max_length=150,
@@ -60,6 +72,7 @@ class CreateCampanaEvaluacionSerializer(serializers.ModelSerializer):
         return attrs
 
     def create(self, validated_data):
+        validated_data = _normalizar_estado(validated_data)
         return Campana_evaluacion.objects.create(**validated_data)
 
 

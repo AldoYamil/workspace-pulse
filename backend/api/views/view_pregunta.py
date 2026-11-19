@@ -18,18 +18,10 @@ class CreatePreguntaciaApiView(generics.CreateAPIView):
 
 ##List
 class ListPreguntaApiView(APIView):
-    def get(self, request):
-        guia_id = request.query_params.get('guia_id')
-        
-        if not guia_id:
-            return Response(
-                {"error": "El parámetro 'guia_id' es requerido."}, 
-                status=status.HTTP_400_BAD_REQUEST
-            )
-            
-        pregunta = Pregunta.objects.filter(guia_referencia_id=guia_id)
-        data = pregunta_serializer.ListPreguntaSerializerByGuia(pregunta, many=True).data
-        return Response(data, status=status.HTTP_200_OK)
+    def get(self, request, guia_id):
+        preguntas = Pregunta.objects.filter(guia_referencia_id=guia_id)
+        serializer = pregunta_serializer.ListPreguntaSerializerByGuia(preguntas, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
     
 ##Detail
 class DetailPreguntaApiView(APIView):

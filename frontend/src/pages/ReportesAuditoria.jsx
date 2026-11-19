@@ -1,3 +1,4 @@
+// src/pages/ReportesAuditoria.jsx
 import { useMemo, useState, useEffect } from 'react';
 import {
   FileText,
@@ -13,9 +14,10 @@ import {
   FileSearch,
   Filter,
 } from 'lucide-react';
-import api from '../api/axios'; // <--- Tu cliente de Axios configurado
+import api from '../api/axios';
 
-// Opciones para filtros de la pantalla
+const STORAGE_KEY_MANUALES = 'wp_reportes_auditoria_manuales';
+
 const tiposReporte = [
   'Todos',
   'Evaluación',
@@ -39,13 +41,9 @@ export default function ReportesAuditoria() {
   const [tipoSeleccionado, setTipoSeleccionado] = useState('Todos');
   const [estadoSeleccionado, setEstadoSeleccionado] = useState('Todos');
 
-  // Controla qué reporte se muestra en la ventana de vista previa.
   const [reporteSeleccionado, setReporteSeleccionado] = useState(null);
-
-  // Controla la ventana para registrar un reporte nuevo.
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
 
-  // Datos temporales del formulario.
   const [nuevoReporte, setNuevoReporte] = useState({
     titulo: '',
     tipo: 'Evaluación',
@@ -54,62 +52,122 @@ export default function ReportesAuditoria() {
     descripcion: '',
   });
 
-  // Cargar registros al montar el componente
   useEffect(() => {
     obtenerReportes();
   }, []);
 
-async function obtenerReportes() {
+  async function obtenerReportes() {
     try {
       setCargando(true);
-      
-      // Consultamos las tablas reales que ya existen en el backend
-      // (Ajusta las rutas según cómo estén en tus archivos de urls/)
-      const [resCampanas, resPlanes, resPoliticas] = await Promise.all([
-        api.get('campanas-evaluacion/'),
-        api.get('planeaciones/'),
-        api.get('politicas-prevencion/'),
+
+      // 1. Cargar reportes registrados manualmente
+      let manuales = [];
+      try {
+        manuales = JSON.parse(localStorage.getItem(STORAGE_KEY_MANUALES) || '[]');
+      } catch {
+        manuales = [];
+      }
+
+      // 2. Consultar los endpoints reales del backend con prefijo v1/
+      const [resCentros, resGuias, resPlanes, resPoliticas, resBitacora] = await Promise.allSettled([
+        api.get('v1/centrotrabajo/list/'),
+        api.get('v1/guiareferencia/list/'),
+        api.get('v1/planeacion/list/'),
+        api.get('v1/politicaprevencion/list/'),
+        api.get('v1/bitacoraauditoriasistema/list/'),
       ]);
 
-      // Transformamos cada registro al formato que espera tu tabla de ReportesAuditoria
-      const reportesEvaluacion = resCampanas.data.map((item) => ({
-        id: `EVAL-${item.id}`,
-        titulo: item.nombre,
-        tipo: 'Evaluación',
-        responsable: 'Equipo RRHH', // O el campo que devuelva tu serializer
-        fecha: item.fecha_inicio,
-        estado: item.estado ? 'Generado' : 'En revisión',
-        descripcion: `Evaluación aplicada en centro de trabajo #${item.centro_trabajo}`,
-        observaciones: `Periodo del ${item.fecha_inicio} al ${item.fecha_fin}`,
-      }));
+      const reportesEvaluacion = [];
 
-      const reportesSeguimiento = resPlanes.data.map((item) => ({
-        id: `SEG-${item.id}`,
-        titulo: item.titulo,
-        tipo: 'Seguimiento',
-        responsable: item.usuario_nombre || `Usuario #${item.usuario}`,
-        fecha: item.fecha_compromiso,
-        estado: item.estado === 'Completado' ? 'Generado' : 'Pendiente',
-        descripcion: item.descripcion_medida,
-        observaciones: 'Medida preventiva derivada de resultados de riesgo.',
-      }));
+      if (resCentros.status === 'fulfilled' && Array.isArray(resCentros.value.data)) {
+        const centros = resCentros.value.data;
+        const guias =
+          resGuias.status === 'fulfilled' && Array.isArray(resGuias.value.data)
+            ? resGuias.value.data
+            : [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }, { id: 5 }, { id: 6 }, { id: 7 }];
 
-      const reportesCumplimiento = resPoliticas.data.map((item) => ({
-        id: `COMP-${item.id}`,
-        titulo: `${item.titulo} (v${item.version})`,
-        tipo: 'Cumplimiento',
-        responsable: 'Administración',
-        fecha: item.fecha_publicacion.split('T')[0],
-        estado: item.estado ? 'Generado' : 'Pendiente',
-        descripcion: item.contenido_texto,
-        observaciones: 'Documento oficial de política de prevención.',
-      }));
+        const promesasCampanas = [];
+        for (const centro of centros) {
+          for (const g of guias) {
+            promesasCampanas.push(api.get(`v1/campana/list/${g.id}/${centro.id}`));
+          }
+        }
 
-      // Unimos todos los reportes reales en la misma tabla
+        const resultadosCampanas = await Promise.allSettled(promesasCampanas);
+        const idsVistos = new Set();
+
+        resultadosCampanas.forEach((res) => {
+          if (res.status === 'fulfilled' && Array.isArray(res.value.data)) {
+            res.value.data.forEach((item) => {
+              if (idsVistos.has(item.id)) return;
+              idsVistos.add(item.id);
+              reportesEvaluacion.push({
+                id: `EVAL-${item.id}`,
+                titulo: item.nombre || `Campaña de evaluación #${item.id}`,
+                tipo: 'Evaluación',
+                responsable: 'Equipo RRHH',
+                fecha: item.fecha_inicio || new Date().toISOString().split('T')[0],
+                estado: item.estado ? 'Generado' : 'En revisión',
+                descripcion: `Evaluación NOM-035 aplicada en centro de trabajo #${item.centro_trabajo}`,
+                observaciones: `Periodo del ${item.fecha_inicio || 'N/A'} al ${item.fecha_fin || 'N/A'}`,
+              });
+            });
+          }
+        });
+      }
+
+      const reportesSeguimiento =
+        resPlanes.status === 'fulfilled' && Array.isArray(resPlanes.value.data)
+          ? resPlanes.value.data.map((item) => ({
+              id: `SEG-${item.id}`,
+              titulo: item.titulo || `Plan de acción #${item.id}`,
+              tipo: 'Seguimiento',
+              responsable: item.usuario_nombre || `Usuario #${item.usuario || 'RRHH'}`,
+              fecha: item.fecha_compromiso || new Date().toISOString().split('T')[0],
+              estado: String(item.estado).toLowerCase() === 'completado' ? 'Generado' : 'Pendiente',
+              descripcion: item.descripcion_medida || 'Medida preventiva registrada.',
+              observaciones: 'Medida preventiva derivada de resultados de riesgo.',
+            }))
+          : [];
+
+      const reportesCumplimiento =
+        resPoliticas.status === 'fulfilled' && Array.isArray(resPoliticas.value.data)
+          ? resPoliticas.value.data.map((item) => ({
+              id: `COMP-${item.id}`,
+              titulo: `${item.titulo || 'Política de Prevención'} (v${item.version || '1.0'})`,
+              tipo: 'Cumplimiento',
+              responsable: 'Administración',
+              fecha: item.fecha_publicacion
+                ? String(item.fecha_publicacion).split('T')[0]
+                : new Date().toISOString().split('T')[0],
+              estado: item.estado ? 'Generado' : 'Pendiente',
+              descripcion: item.contenido_texto || 'Política oficial de prevención psicosocial.',
+              observaciones: 'Documento oficial de política de prevención NOM-035.',
+            }))
+          : [];
+
+      const reportesBitacora =
+        resBitacora.status === 'fulfilled' && Array.isArray(resBitacora.value.data)
+          ? resBitacora.value.data.map((item) => ({
+              id: `BIT-${item.id}`,
+              titulo: item.accion || item.descripcion || `Evento de auditoría #${item.id}`,
+              tipo: 'Cumplimiento',
+              responsable: item.usuario_nombre || `Usuario #${item.usuario || 'Sistema'}`,
+              fecha: item.fecha_hora
+                ? String(item.fecha_hora).split('T')[0]
+                : new Date().toISOString().split('T')[0],
+              estado: 'Generado',
+              descripcion: item.detalle || item.accion || 'Registro automático en bitácora del sistema.',
+              observaciones: 'Trazabilidad registrada en Bitácora de Auditoría.',
+            }))
+          : [];
+
       setReportes([
+        ...manuales,
         ...reportesEvaluacion,
         ...reportesSeguimiento,
         ...reportesCumplimiento,
+        ...reportesBitacora,
       ]);
     } catch (error) {
       console.error('Error al cargar los datos reales para auditoría:', error);
@@ -118,6 +176,7 @@ async function obtenerReportes() {
     }
   }
 
+  // Contadores para las tarjetas superiores (restaurados)
   const totalReportes = reportes.length;
   const reportesGenerados = reportes.filter((r) => r.estado === 'Generado').length;
   const reportesPendientes = reportes.filter((r) => r.estado === 'Pendiente').length;
@@ -128,9 +187,9 @@ async function obtenerReportes() {
 
     return reportes.filter((reporte) => {
       const coincideBusqueda =
-        reporte.titulo.toLowerCase().includes(texto) ||
+        (reporte.titulo || '').toLowerCase().includes(texto) ||
         String(reporte.id).toLowerCase().includes(texto) ||
-        reporte.responsable.toLowerCase().includes(texto);
+        (reporte.responsable || '').toLowerCase().includes(texto);
 
       const coincideTipo =
         tipoSeleccionado === 'Todos' || reporte.tipo === tipoSeleccionado;
@@ -156,44 +215,50 @@ async function obtenerReportes() {
       return;
     }
 
+    const creado = {
+      id: `MAN-${Date.now().toString(36).toUpperCase()}`,
+      ...nuevoReporte,
+      estado: 'Pendiente',
+      observaciones: 'Reporte registrado. Falta completar su revisión y generación.',
+    };
+
     try {
-      const payload = {
-        ...nuevoReporte,
-        estado: 'Pendiente',
-        observaciones: 'Reporte registrado. Falta completar su revisión y generación.',
-      };
-
-      // Petición POST al backend
-      const respuesta = await api.post('reportes-auditoria/', payload);
-
-      setReportes((anteriores) => [respuesta.data, ...anteriores]);
-
-      setNuevoReporte({
-        titulo: '',
-        tipo: 'Evaluación',
-        responsable: '',
-        fecha: new Date().toISOString().split('T')[0],
-        descripcion: '',
-      });
-
-      setMostrarFormulario(false);
-    } catch (error) {
-      console.error('Error al registrar el reporte:', error);
+      const previos = JSON.parse(localStorage.getItem(STORAGE_KEY_MANUALES) || '[]');
+      localStorage.setItem(STORAGE_KEY_MANUALES, JSON.stringify([creado, ...previos]));
+    } catch {
+      // Ignorar si localStorage está lleno
     }
+
+    setReportes((anteriores) => [creado, ...anteriores]);
+
+    setNuevoReporte({
+      titulo: '',
+      tipo: 'Evaluación',
+      responsable: '',
+      fecha: new Date().toISOString().split('T')[0],
+      descripcion: '',
+    });
+
+    setMostrarFormulario(false);
   }
 
   async function cambiarEstado(id, nuevoEstado) {
-    try {
-      // Petición PATCH para actualizar el estado en el backend
-      await api.patch(`reportes-auditoria/${id}/`, { estado: nuevoEstado });
+    setReportes((anteriores) =>
+      anteriores.map((reporte) =>
+        reporte.id === id ? { ...reporte, estado: nuevoEstado } : reporte
+      )
+    );
 
-      setReportes((anteriores) =>
-        anteriores.map((reporte) =>
-          reporte.id === id ? { ...reporte, estado: nuevoEstado } : reporte
-        )
-      );
-    } catch (error) {
-      console.error('Error al cambiar el estado:', error);
+    if (String(id).startsWith('MAN-')) {
+      try {
+        const previos = JSON.parse(localStorage.getItem(STORAGE_KEY_MANUALES) || '[]');
+        const actualizados = previos.map((r) =>
+          r.id === id ? { ...r, estado: nuevoEstado } : r
+        );
+        localStorage.setItem(STORAGE_KEY_MANUALES, JSON.stringify(actualizados));
+      } catch {
+        // Ignorar error de almacenamiento
+      }
     }
   }
 
@@ -229,9 +294,7 @@ async function obtenerReportes() {
   }
 
   return (
-    // CAMBIO PRINCIPAL: Se usa space-y-6 y w-full sin max-width, igual que en Capacitaciones.jsx
     <div className="w-full space-y-6 animate-in fade-in duration-300">
-      
       {/* ENCABEZADO */}
       <section className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
@@ -634,7 +697,6 @@ async function obtenerReportes() {
   );
 }
 
-// Componente reutilizable para las tarjetas de resumen.
 function TarjetaIndicador({
   titulo,
   valor,
@@ -642,7 +704,6 @@ function TarjetaIndicador({
   icono: Icono,
   color,
 }) {
-  // Clases completas para que Tailwind pueda detectarlas al compilar.
   const estilosIcono = {
     blue: 'bg-blue-500/20 text-blue-300',
     green: 'bg-emerald-500/20 text-emerald-300',
@@ -666,7 +727,6 @@ function TarjetaIndicador({
   );
 }
 
-// Componente reutilizable para los detalles de la vista previa.
 function DatoReporte({ etiqueta, valor }) {
   return (
     <div className="rounded-xl bg-slate-50 p-4">

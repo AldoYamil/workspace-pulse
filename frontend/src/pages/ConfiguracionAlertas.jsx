@@ -26,7 +26,7 @@ export default function ConfiguracionAlertas() {
         const respuestaCentros = await api.get('v1/centrotrabajo/list/');
         if (respuestaCentros.data && respuestaCentros.data.length > 0) {
           setCentrosTrabajo(respuestaCentros.data);
-          setCentroSeleccionado(respuestaCentros.data[0].id);
+          setCentroSeleccionado(String(respuestaCentros.data[0].id));
         }
       } catch (error) {
         console.error('Error al cargar centros de trabajo:', error);
@@ -38,17 +38,36 @@ export default function ConfiguracionAlertas() {
   // Cargar áreas cuando cambie el centro de trabajo seleccionado
   useEffect(() => {
     async function cargarAreasPorCentro() {
-      if (!centroSeleccionado) return;
+      if (!centroSeleccionado) {
+        setAreas([]);
+        setAreaSeleccionada('');
+        return;
+      }
       try {
-        const respuestaAreas = await api.get(`v1/area/by-centro/${centroSeleccionado}/`);
-        setAreas(respuestaAreas.data);
-        if (respuestaAreas.data.length > 0) {
-          setAreaSeleccionada(respuestaAreas.data[0].id);
+        // Primero intenta la lista general y filtra por el centro seleccionado
+        const respuestaAreas = await api.get('v1/area/list/');
+        const lista = Array.isArray(respuestaAreas.data)
+          ? respuestaAreas.data
+          : (respuestaAreas.data?.results || []);
+
+        const filtradas = lista.filter((a) => {
+          const centroId =
+            typeof a.centro_trabajo === 'object'
+              ? a.centro_trabajo?.id
+              : (a.centro_trabajo ?? a.centro_id ?? a.centro);
+          return String(centroId) === String(centroSeleccionado);
+        });
+
+        setAreas(filtradas);
+        if (filtradas.length > 0) {
+          setAreaSeleccionada(String(filtradas[0].id));
         } else {
           setAreaSeleccionada('');
         }
       } catch (error) {
         console.error('Error al cargar áreas:', error);
+        setAreas([]);
+        setAreaSeleccionada('');
       }
     }
     cargarAreasPorCentro();
@@ -57,6 +76,7 @@ export default function ConfiguracionAlertas() {
   // Función para guardar la configuración real en Django
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (!centroSeleccionado || !areaSeleccionada) {
       setMensaje('Debes seleccionar un Centro de Trabajo y un Área.');
       return;
@@ -71,16 +91,18 @@ export default function ConfiguracionAlertas() {
         valor_minimo_aceptable: Number(riesgo),
         centro_trabajo: Number(centroSeleccionado),
         area: Number(areaSeleccionada),
-        // Campo preparado para cuando el backend almacene o use este correo (Resend)
-        correo_responsable: notificaciones ? correo.trim() : ''
+        correo_responsable: notificaciones ? correo.trim() : '',
       };
 
       await api.post('v1/configuracionumbral/create/', payload);
-      
+
       setMensaje('¡Configuración guardada correctamente en la base de datos!');
     } catch (error) {
       console.error('Error al guardar la configuración:', error);
-      setMensaje('Hubo un error al guardar la configuración en el servidor.');
+      const detalle = error.response?.data
+        ? JSON.stringify(error.response.data)
+        : 'Hubo un error al guardar la configuración en el servidor.';
+      setMensaje(detalle);
     } finally {
       setCargando(false);
     }

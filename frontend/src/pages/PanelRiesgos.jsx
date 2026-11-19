@@ -1,6 +1,5 @@
-// src/pages/panelRiesgoss.jsx
-import { useState } from 'react';
-
+// src/pages/panelRiesgos.jsx
+import { useState, useMemo } from 'react';
 import {
   Activity,
   AlertTriangle,
@@ -10,10 +9,10 @@ import {
   CheckCircle2,
   Download,
   Filter,
+  Loader2,
   ShieldAlert,
   Users,
 } from 'lucide-react';
-
 import {
   ResponsiveContainer,
   LineChart,
@@ -22,76 +21,30 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   BarChart,
   Bar,
   PieChart,
   Pie,
   Cell,
 } from 'recharts';
+import { useRiesgos } from '../hooks/useRiesgos';
+import { useCentrosTrabajo } from '../hooks/useCentrosTrabajo';
+import { useAreas } from '../hooks/useAreas';
 
-// ============================================================
-// POR LO MIENTRAS XD: DATOS FALSOS PARA LAS GRÁFICAS
-// ============================================================
-// Estos datos solamente sirven para visualizar la interfaz.
-// DESPUÉS: obtener estos datos desde los endpoints del backend.
-// El backend consultará la base de datos y devolverá los resultados.
-//
-// IMPORTANTE:
-// Los porcentajes son ejemplos, NO resultados reales de la NOM-035.
-
-const tendencias = [
-  { periodo: 'Ene', riesgo: 32, estres: 25 },
-  { periodo: 'Feb', riesgo: 38, estres: 30 },
-  { periodo: 'Mar', riesgo: 35, estres: 28 },
-  { periodo: 'Abr', riesgo: 45, estres: 37 },
-  { periodo: 'May', riesgo: 41, estres: 33 },
-  { periodo: 'Jun', riesgo: 52, estres: 43 },
-];
-
-const factores = [
-  { nombre: 'Carga de trabajo', valor: 76 },
-  { nombre: 'Jornada laboral', valor: 62 },
-  { nombre: 'Liderazgo', valor: 48 },
-  { nombre: 'Relaciones', valor: 35 },
-  { nombre: 'Reconocimiento', valor: 57 },
-];
-
-const nivelesRiesgo = [
-  { nombre: 'Bajo', valor: 45, color: '#16a34a' },
-  { nombre: 'Medio', valor: 35, color: '#f59e0b' },
-  { nombre: 'Alto', valor: 20, color: '#dc2626' },
-];
-
-const departamentos = [
-  { nombre: 'Producción', riesgo: 72 },
-  { nombre: 'Recursos Humanos', riesgo: 28 },
-  { nombre: 'Ventas', riesgo: 55 },
-  { nombre: 'Logística', riesgo: 64 },
-];
-
-// POR LO MIENTRAS XD:
-// Estas sedes están escritas manualmente.
-// DESPUÉS: obtenerlas desde el catálogo de centros de trabajo
-// registrado en la base de datos.
-const sedes = [
-  'Todas las sedes',
-  'Sede principal',
-  'Sucursal norte',
-];
-
-const periodos = [
+const PERIODOS = [
   { label: 'Últimos 6 meses', value: '6' },
   { label: 'Últimos 3 meses', value: '3' },
   { label: 'Último mes', value: '1' },
 ];
 
-// ============================================================
-// COMPONENTE REUTILIZABLE: TARJETA DE INDICADOR
-// ============================================================
-// Este componente SÍ se puede conservar al conectar el backend.
-// Recibe los valores mediante props y muestra la información.
-// No consulta la base de datos por sí mismo.
+const COLORES_NIVEL = {
+  bajo: '#16a34a',
+  nulo: '#16a34a',
+  medio: '#f59e0b',
+  moderado: '#f59e0b',
+  alto: '#dc2626',
+  'muy alto': '#991b1b',
+};
 
 function TarjetaIndicador({
   titulo,
@@ -106,15 +59,9 @@ function TarjetaIndicador({
     <article className="bg-white p-5 rounded-2xl shadow-lg border border-white/10 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-sm font-medium text-slate-500">
-            {titulo}
-          </p>
-
-          <p className="mt-3 text-3xl font-bold tracking-tight text-slate-800">
-            {valor}
-          </p>
+          <p className="text-sm font-medium text-slate-500">{titulo}</p>
+          <p className="mt-3 text-3xl font-bold tracking-tight text-slate-800">{valor}</p>
         </div>
-
         <div className={`rounded-xl p-3 ${color}`}>
           <Icono size={22} />
         </div>
@@ -127,55 +74,37 @@ function TarjetaIndicador({
               positivo ? 'text-emerald-600' : 'text-red-600'
             }`}
           >
-            {positivo ? (
-              <ArrowDownRight size={15} />
-            ) : (
-              <ArrowUpRight size={15} />
-            )}
-
+            {positivo ? <ArrowDownRight size={15} /> : <ArrowUpRight size={15} />}
             {tendencia}
           </span>
         )}
-
         <span className="text-slate-500">{descripcion}</span>
       </div>
     </article>
   );
 }
 
-// ============================================================
-// COMPONENTE REUTILIZABLE: CONTENEDOR DE GRÁFICA
-// ============================================================
-// Este componente solo organiza visualmente el título,
-// la descripción y el contenido de cada gráfica.
-// Se puede conservar después de conectar la API.
-
 function TarjetaGrafica({ titulo, descripcion, children }) {
   return (
     <section className="min-w-0 bg-white p-6 rounded-2xl shadow-lg border border-white/10">
-      <div className="mb-5">
-        <h2 className="font-bold text-slate-800">{titulo}</h2>
-
-        <p className="mt-1 text-sm text-slate-500">
-          {descripcion}
-        </p>
-      </div>
-
+      {(titulo || descripcion) && (
+        <div className="mb-5">
+          {titulo && <h2 className="font-bold text-slate-800">{titulo}</h2>}
+          {descripcion && <p className="mt-1 text-sm text-slate-500">{descripcion}</p>}
+        </div>
+      )}
       {children}
     </section>
   );
 }
 
-// ============================================================
-// FUNCIONES DE EXPORTACIÓN
-// ============================================================
-
 const exportToCSV = (data, filename) => {
+  if (!data || data.length === 0) return;
   const headers = Object.keys(data[0]).join(',');
-  const rows = data.map(obj => Object.values(obj).join(','));
+  const rows = data.map((obj) => Object.values(obj).join(','));
   const csvContent = [headers, ...rows].join('\n');
-  
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+
+  const blob = new Blob(['\uFEFF', csvContent], { type: 'text/csv;charset=utf-8;' });
   const link = document.createElement('a');
   const url = URL.createObjectURL(blob);
   link.setAttribute('href', url);
@@ -184,110 +113,123 @@ const exportToCSV = (data, filename) => {
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
+  URL.revokeObjectURL(url);
 };
 
-// ============================================================
-// PANTALLA PRINCIPAL
-// ============================================================
-
 export default function PanelRiesgos() {
-  // POR LO MIENTRAS XD:
-  // Estos estados almacenan los filtros seleccionados en React.
-  // DESPUÉS: enviar sus valores a la API para consultar los datos
-  // reales de la sede, el periodo y el departamento seleccionados.
-
   const [periodo, setPeriodo] = useState('6');
-  const [departamento, setDepartamento] = useState('Todos');
-  const [sede, setSede] = useState('Todas las sedes');
+  const [centroId, setCentroId] = useState('');
+  const [areaId, setAreaId] = useState('');
 
-  // POR LO MIENTRAS XD:
-  // Filtramos los datos simulados directamente en el frontend.
-  // DESPUÉS: sustituir esta lógica por la respuesta del backend.
-  // Por ejemplo, GET /api/riesgos/tendencias?meses=6
+  const { centros } = useCentrosTrabajo();
+  const { areas } = useAreas();
 
-  const datosTendencia =
-    periodo === '1'
-      ? tendencias.slice(-1)
-      : periodo === '3'
-        ? tendencias.slice(-3)
-        : tendencias;
+  // Hook conectado al endpoint real de PanelRiesgosView
+  const { panelData, loading, error } = useRiesgos({
+    centroId: centroId || null,
+    areaId: areaId || null,
+    meses: periodo || null,
+    autoFetch: true,
+  });
 
-  // POR LO MIENTRAS XD:
-  // Este filtro usa un arreglo local de departamentos.
-  // DESPUÉS: filtrar por el ID real del departamento en la API.
+  // Áreas filtradas por el centro de trabajo seleccionado
+  const areasFiltradas = useMemo(() => {
+    if (!centroId) return areas;
+    return areas.filter((a) => {
+      const cId = typeof a.centro_trabajo === 'object' ? a.centro_trabajo?.id : a.centro_trabajo;
+      return String(cId) === String(centroId);
+    });
+  }, [areas, centroId]);
 
-  const departamentosVisibles =
-    departamento === 'Todos'
-      ? departamentos
-      : departamentos.filter(
-          (item) => item.nombre === departamento,
-        );
+  // Normalización de estructuras provenientes del backend
+  const tendencias = useMemo(() => {
+    const raw = panelData?.tendencias || panelData?.tendencia || [];
+    return raw.map((item) => ({
+      periodo: item.periodo || item.mes || item.fecha || 'N/A',
+      riesgo: Number(item.riesgo ?? item.indice_riesgo ?? item.valor ?? 0),
+      estres: Number(item.estres ?? item.nivel_estres ?? 0),
+    }));
+  }, [panelData]);
 
-  // POR LO MIENTRAS XD:
-  // Ajustamos artificialmente los valores según el departamento.
-  // DESPUÉS: recibir los índices calculados por el backend.
-  // No utilizar esta fórmula como cálculo oficial de riesgo.
+  const factoresVisibles = useMemo(() => {
+    const raw = panelData?.factores || panelData?.factores_riesgo || panelData?.categorias || [];
+    return raw.map((item) => ({
+      nombre: item.nombre || item.categoria || item.factor || 'Factor',
+      valor: Number(item.valor ?? item.porcentaje ?? item.indice ?? 0),
+    }));
+  }, [panelData]);
 
-  const factoresVisibles =
-    departamento === 'Todos'
-      ? factores
-      : factores.map((factor) => ({
-          ...factor,
-          valor: Math.max(
-            10,
-            Math.min(
-              95,
-              factor.valor +
-                (departamentos.find(
-                  (item) => item.nombre === departamento,
-                )?.riesgo ?? 50) -
-                50,
-            ),
-          ),
-        }));
+  const nivelesRiesgo = useMemo(() => {
+    const raw = panelData?.niveles_riesgo || panelData?.distribucion || [];
+    return raw.map((item) => {
+      const nombre = item.nombre || item.nivel || 'Bajo';
+      const key = nombre.toLowerCase();
+      return {
+        nombre,
+        valor: Number(item.valor ?? item.porcentaje ?? item.cantidad ?? 0),
+        color: item.color || COLORES_NIVEL[key] || '#3b82f6',
+      };
+    });
+  }, [panelData]);
 
-  // POR LO MIENTRAS XD:
-  // Calculamos un promedio usando los datos simulados.
-  // DESPUÉS: obtener el indicador calculado desde el backend.
-  // El cálculo real dependerá de cómo definan el índice de riesgo.
+  const departamentosVisibles = useMemo(() => {
+    const raw = panelData?.departamentos || panelData?.areas || panelData?.riesgo_por_area || [];
+    return raw.map((item) => ({
+      id: item.id,
+      nombre: item.nombre || item.area || item.departamento || 'Área',
+      riesgo: Number(item.riesgo ?? item.indice ?? item.porcentaje ?? 0),
+      nivel_texto: item.nivel || item.clasificacion || null,
+    }));
+  }, [panelData]);
 
-  const promedioRiesgo =
-    departamentosVisibles.length > 0
-      ? Math.round(
-          departamentosVisibles.reduce(
-            (total, item) => total + item.riesgo,
-            0,
-          ) / departamentosVisibles.length,
-        )
-      : 0;
+  // Indicadores principales (KPIs)
+  const promedioRiesgo = useMemo(() => {
+    if (panelData?.promedio_riesgo !== undefined) return Math.round(Number(panelData.promedio_riesgo));
+    if (panelData?.kpis?.promedio_riesgo !== undefined) return Math.round(Number(panelData.kpis.promedio_riesgo));
+    if (departamentosVisibles.length === 0) return 0;
+    return Math.round(
+      departamentosVisibles.reduce((acc, item) => acc + item.riesgo, 0) / departamentosVisibles.length
+    );
+  }, [panelData, departamentosVisibles]);
 
-  // ==========================================================
-  // EXPORTACIÓN TEMPORAL
-  // ==========================================================
-  // POR LO MIENTRAS XD:
-  // Este botón descarga un archivo TXT con datos de ejemplo.
-  // DESPUÉS:
-  // 1. Crear el reporte con datos reales.
-  // 2. Implementar jsPDF + html2canvas.
-  // 3. Consultar el backend para recuperar los datos autorizados.
-  //
-  // IMPORTANTE: esta función NO genera un PDF oficial.
+  const porcentajeNivelAlto = useMemo(() => {
+    if (panelData?.nivel_alto !== undefined) return Math.round(Number(panelData.nivel_alto));
+    if (panelData?.kpis?.nivel_alto !== undefined) return Math.round(Number(panelData.kpis.nivel_alto));
+    const alto = nivelesRiesgo.find((n) => n.nombre.toLowerCase().includes('alto'));
+    return alto ? alto.valor : 0;
+  }, [panelData, nivelesRiesgo]);
+
+  const totalFactores =
+    panelData?.total_factores ?? panelData?.kpis?.factores_evaluados ?? factoresVisibles.length;
+
+  const totalDepartamentos =
+    panelData?.total_departamentos ?? panelData?.kpis?.departamentos ?? departamentosVisibles.length;
+
+  const handleCentroChange = (nuevoCentroId) => {
+    setCentroId(nuevoCentroId);
+    setAreaId('');
+  };
 
   function exportarResumen() {
+    const sedeNombre = centroId
+      ? centros.find((c) => String(c.id) === String(centroId))?.nombre || `Centro #${centroId}`
+      : 'Todas las sedes';
+    const areaNombre = areaId
+      ? areas.find((a) => String(a.id) === String(areaId))?.nombre || `Área #${areaId}`
+      : 'Todos los departamentos';
+
     const contenido = [
-      'WORKSPACE PULSE - RESUMEN ANALITICO DE RIESGOS',
-      `Periodo seleccionado: ${periodo} mes(es)`,
-      `Sede seleccionada: ${sede}`,
-      `Departamento: ${departamento}`,
+      'WORKSPACE PULSE - RESUMEN ANALITICO DE RIESGOS (NOM-035)',
+      `Periodo seleccionado: Últimos ${periodo} mes(es)`,
+      `Centro de trabajo: ${sedeNombre}`,
+      `Departamento / Área: ${areaNombre}`,
       `Nivel de riesgo promedio: ${promedioRiesgo}%`,
+      `Incidencia nivel alto: ${porcentajeNivelAlto}%`,
       '',
-      'ADVERTENCIA: DATOS DE DEMOSTRACION.',
-      'Este archivo no contiene resultados reales de evaluaciones.',
-      '',
-      'Riesgo por departamento:',
-      ...departamentosVisibles.map(
-        (item) => `${item.nombre}: ${item.riesgo}%`,
-      ),
+      'Riesgo por departamento / área:',
+      ...(departamentosVisibles.length > 0
+        ? departamentosVisibles.map((item) => `- ${item.nombre}: ${item.riesgo}%`)
+        : ['Sin resultados registrados para los filtros seleccionados.']),
     ].join('\n');
 
     const archivo = new Blob(['\uFEFF', contenido], {
@@ -296,29 +238,20 @@ export default function PanelRiesgos() {
 
     const url = URL.createObjectURL(archivo);
     const enlace = document.createElement('a');
-
     enlace.href = url;
-    enlace.download = 'resumen-riesgos.txt';
+    enlace.download = 'resumen-riesgos-nom035.txt';
     enlace.click();
-
     URL.revokeObjectURL(url);
   }
 
-  // ==========================================================
-  // INTERFAZ
-  // ==========================================================
-
   return (
-    // CAMBIO: Se elimina pt-6 y pb-8 para igualar la altura vertical con AppliedSurveys.jsx
-    // Se mantienen los márgenes negativos y padding horizontal para ocupar todo el ancho.
     <main className="space-y-6 animate-in fade-in duration-300 -mx-6 sm:-mx-8 lg:-mx-10 px-6 sm:px-8 lg:px-10">
-
       {/* ENCABEZADO */}
       <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
           <h1 className="text-3xl font-bold text-white mb-2">Panel de riesgos psicosociales</h1>
           <p className="text-slate-300 text-base">
-            Analiza los factores de riesgo, identifica tendenciasy detecta las áreas que requieren atención prioritaria.
+            Analiza los factores de riesgo, identifica tendencias y detecta las áreas que requieren atención prioritaria.
           </p>
         </div>
 
@@ -336,13 +269,10 @@ export default function PanelRiesgos() {
       <section className="bg-white/10 backdrop-blur-md p-6 rounded-2xl border border-white/10 shadow-lg">
         <div className="mb-4 flex items-center gap-2">
           <Filter size={18} className="text-slate-300" />
-          <h2 className="font-semibold text-white">
-            Filtros de análisis
-          </h2>
+          <h2 className="font-semibold text-white">Filtros de análisis</h2>
         </div>
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-
           {/* FILTRO DE PERIODO */}
           <label className="block">
             <span className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-300">
@@ -354,7 +284,7 @@ export default function PanelRiesgos() {
               onChange={(event) => setPeriodo(event.target.value)}
               className="w-full rounded-xl border border-white/20 bg-white/90 px-3 py-3 text-sm text-slate-800 outline-none focus:border-[#1E3A5F] focus:ring-2 focus:ring-[#1E3A5F]/20 cursor-pointer"
             >
-              {periodos.map((item) => (
+              {PERIODOS.map((item) => (
                 <option key={item.value} value={item.value}>
                   {item.label}
                 </option>
@@ -362,292 +292,312 @@ export default function PanelRiesgos() {
             </select>
           </label>
 
-          {/* FILTRO DE SEDE */}
+          {/* FILTRO DE CENTRO DE TRABAJO */}
           <label className="block">
             <span className="mb-2 block text-sm font-medium text-slate-300">
               Centro de trabajo
             </span>
             <select
-              value={sede}
-              onChange={(event) => setSede(event.target.value)}
+              value={centroId}
+              onChange={(event) => handleCentroChange(event.target.value)}
               className="w-full rounded-xl border border-white/20 bg-white/90 px-3 py-3 text-sm text-slate-800 outline-none focus:border-[#1E3A5F] focus:ring-2 focus:ring-[#1E3A5F]/20 cursor-pointer"
             >
-              {sedes.map((item) => (
-                <option key={item} value={item}>
-                  {item}
+              <option value="">Todas las sedes</option>
+              {centros.map((centro) => (
+                <option key={centro.id} value={centro.id}>
+                  {centro.nombre}
                 </option>
               ))}
             </select>
-            {/* PENDIENTE:
-                El filtro de sede todavía no filtra las gráficas.
-                Cuando exista el endpoint, enviar el ID de la sede
-                seleccionada y actualizar los datos recibidos. */}
           </label>
 
-          {/* FILTRO DE DEPARTAMENTO */}
+          {/* FILTRO DE DEPARTAMENTO / ÁREA */}
           <label className="block">
             <span className="mb-2 block text-sm font-medium text-slate-300">
               Departamento
             </span>
             <select
-              value={departamento}
-              onChange={(event) => setDepartamento(event.target.value)}
+              value={areaId}
+              onChange={(event) => setAreaId(event.target.value)}
               className="w-full rounded-xl border border-white/20 bg-white/90 px-3 py-3 text-sm text-slate-800 outline-none focus:border-[#1E3A5F] focus:ring-2 focus:ring-[#1E3A5F]/20 cursor-pointer"
             >
-              <option value="Todos">Todos los departamentos</option>
-              {departamentos.map((item) => (
-                <option key={item.nombre} value={item.nombre}>
-                  {item.nombre}
+              <option value="">Todos los departamentos</option>
+              {areasFiltradas.map((area) => (
+                <option key={area.id} value={area.id}>
+                  {area.nombre}
                 </option>
               ))}
             </select>
           </label>
-
         </div>
       </section>
 
+      {/* ERROR DE CARGA */}
+      {error && (
+        <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm">
+          Error al consultar el panel de riesgos: {typeof error === 'object' ? JSON.stringify(error) : error}
+        </div>
+      )}
+
       {/* INDICADORES PRINCIPALES */}
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-
         <TarjetaIndicador
           titulo="Riesgo promedio"
-          valor={`${promedioRiesgo}%`}
-          descripcion="Índice ilustrativo"
+          valor={loading ? '...' : `${promedioRiesgo}%`}
+          descripcion="Índice general NOM-035"
           icono={Activity}
           color="bg-blue-50 text-blue-700"
         />
 
         <TarjetaIndicador
           titulo="Nivel alto"
-          valor="20%"
-          descripcion="Distribución simulada"
+          valor={loading ? '...' : `${porcentajeNivelAlto}%`}
+          descripcion="Evaluaciones en riesgo alto"
           icono={ShieldAlert}
           color="bg-red-50 text-red-700"
-          tendencia="5%"
+          tendencia={panelData?.tendencia_alto || null}
           positivo={false}
         />
 
         <TarjetaIndicador
           titulo="Factores evaluados"
-          valor={factores.length}
-          descripcion="Categorías de ejemplo"
+          valor={loading ? '...' : totalFactores}
+          descripcion="Categorías analizadas"
           icono={CheckCircle2}
           color="bg-emerald-50 text-emerald-700"
         />
 
         <TarjetaIndicador
           titulo="Departamentos"
-          valor={departamentosVisibles.length}
-          descripcion="En la selección actual"
+          valor={loading ? '...' : totalDepartamentos}
+          descripcion="Áreas con resultados"
           icono={Users}
           color="bg-violet-50 text-violet-700"
         />
-
-        {/* PENDIENT:
-            Revisar cada indicador.
-            Cuando conectemos la API, sustituir los valores simulados
-            por los campos reales que devuelva el backend. */}
-
       </section>
 
-      {/* GRAFICAS DE TENDENCIA Y DISTRIBUCION (ESTILO ADMIN DASHBOARD) */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        {/* TENDENCIA TEMPORAL - ESTILO ADMIN DASHBOARD */}
-        <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-lg border border-white/10">
-          <div className="flex justify-between items-center mb-6">
-            <h3 className="text-lg font-bold text-slate-800">Tendencia de riesgo psicosocial</h3>
-            <button 
-              onClick={() => exportToCSV(datosTendencia, 'tendencia_riesgo_estres')}
-              className="text-xs font-medium text-[#1E3A5F] hover:text-[#172A47] flex items-center gap-1 transition-colors"
-            >
-              <Download size={14}/> Exportar CSV
-            </button>
-          </div>
-          <div className="h-[300px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={datosTendencia}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                <XAxis dataKey="periodo" axisLine={false} tickLine={false} tick={{fill: '#64748B', fontSize: 12}} dy={10} />
-                <YAxis axisLine={false} tickLine={false} tick={{fill: '#64748B', fontSize: 12}} />
-                <Tooltip 
-                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-                />
-                <Line type="monotone" dataKey="riesgo" stroke="#2563eb" strokeWidth={3} dot={{r: 4, fill: '#2563eb'}} activeDot={{r: 6}} name="Riesgo %" />
-                <Line type="monotone" dataKey="estres" stroke="#f59e0b" strokeWidth={2} strokeDasharray="5 5" dot={false} name="Estrés" />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
+      {loading ? (
+        <div className="bg-white rounded-2xl p-12 flex flex-col items-center justify-center text-slate-500 gap-3 shadow-lg">
+          <Loader2 className="animate-spin text-[#1E3A5F]" size={32} />
+          <p className="text-sm font-medium">Calculando indicadores de riesgo desde la base de datos...</p>
         </div>
-
-        {/* DISTRIBUCIÓN DE RIESGO - ESTILO ADMIN DASHBOARD */}
-        <div className="bg-white p-6 rounded-2xl shadow-lg border border-white/10 flex flex-col">
-          <div className="flex justify-between items-center mb-2">
-            <h3 className="text-lg font-bold text-slate-800">Distribución de Riesgos Psicosociales</h3>
-            <button 
-              onClick={() => exportToCSV(nivelesRiesgo, 'distribucion_nivel_riesgo')}
-              className="text-xs font-medium text-[#1E3A5F] hover:text-[#172A47] flex items-center gap-1 transition-colors"
-            >
-              <Download size={14}/> Exportar CSV
-            </button>
-          </div>
-          <div className="flex-1 min-h-[200px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={nivelesRiesgo}
-                  cx="50%" cy="50%"
-                  innerRadius={60} outerRadius={80}
-                  paddingAngle={5}
-                  dataKey="valor"
+      ) : (
+        <>
+          {/* GRÁFICAS DE TENDENCIA Y DISTRIBUCIÓN */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* TENDENCIA TEMPORAL */}
+            <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-lg border border-white/10">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-lg font-bold text-slate-800">Tendencia de riesgo psicosocial</h3>
+                <button
+                  type="button"
+                  onClick={() => exportToCSV(tendencias, 'tendencia_riesgo_estres')}
+                  className="text-xs font-medium text-[#1E3A5F] hover:text-[#172A47] flex items-center gap-1 transition-colors"
                 >
-                  {nivelesRiesgo.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-          <div className="flex justify-center gap-4 mt-2">
-            {nivelesRiesgo.map((item, idx) => (
-              <div key={idx} className="flex items-center gap-1.5 text-xs font-medium text-slate-600">
-                <span className="w-2.5 h-2.5 rounded-full" style={{backgroundColor: item.color}}></span>
-                {item.nombre} ({item.valor}%)
+                  <Download size={14} /> Exportar CSV
+                </button>
               </div>
-            ))}
+              <div className="h-[300px] w-full">
+                {tendencias.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={tendencias}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                      <XAxis dataKey="periodo" axisLine={false} tickLine={false} tick={{ fill: '#64748B', fontSize: 12 }} dy={10} />
+                      <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748B', fontSize: 12 }} />
+                      <Tooltip
+                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                      />
+                      <Line type="monotone" dataKey="riesgo" stroke="#2563eb" strokeWidth={3} dot={{ r: 4, fill: '#2563eb' }} activeDot={{ r: 6 }} name="Riesgo %" />
+                      <Line type="monotone" dataKey="estres" stroke="#f59e0b" strokeWidth={2} strokeDasharray="5 5" dot={false} name="Estrés" />
+                    </LineChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="h-full flex items-center justify-center text-sm text-slate-400">
+                    Sin datos históricos de tendencia para el periodo seleccionado.
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* DISTRIBUCIÓN DE RIESGO */}
+            <div className="bg-white p-6 rounded-2xl shadow-lg border border-white/10 flex flex-col">
+              <div className="flex justify-between items-center mb-2">
+                <h3 className="text-lg font-bold text-slate-800">Distribución de Riesgos Psicosociales</h3>
+                <button
+                  type="button"
+                  onClick={() => exportToCSV(nivelesRiesgo, 'distribucion_nivel_riesgo')}
+                  className="text-xs font-medium text-[#1E3A5F] hover:text-[#172A47] flex items-center gap-1 transition-colors"
+                >
+                  <Download size={14} /> Exportar CSV
+                </button>
+              </div>
+              <div className="flex-1 min-h-[200px]">
+                {nivelesRiesgo.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={nivelesRiesgo}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={60}
+                        outerRadius={80}
+                        paddingAngle={5}
+                        dataKey="valor"
+                      >
+                        {nivelesRiesgo.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="h-full flex items-center justify-center text-sm text-slate-400">
+                    Sin distribución registrada.
+                  </div>
+                )}
+              </div>
+              <div className="flex flex-wrap justify-center gap-4 mt-2">
+                {nivelesRiesgo.map((item, idx) => (
+                  <div key={idx} className="flex items-center gap-1.5 text-xs font-medium text-slate-600">
+                    <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }}></span>
+                    {item.nombre} ({item.valor}%)
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
 
-      {/* GRAFICAS COMPARATIVAS */}
-      <section className="grid grid-cols-1 gap-5 xl:grid-cols-2">
+          {/* GRÁFICAS COMPARATIVAS */}
+          <section className="grid grid-cols-1 gap-5 xl:grid-cols-2">
+            {/* RIESGO POR DEPARTAMENTO */}
+            <TarjetaGrafica>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-bold text-slate-800">Riesgo por departamento</h3>
+                <button
+                  type="button"
+                  onClick={() => exportToCSV(departamentosVisibles, 'riesgo_por_departamento')}
+                  className="text-xs font-medium text-[#1E3A5F] hover:text-[#172A47] flex items-center gap-1 transition-colors"
+                >
+                  <Download size={14} /> Exportar CSV
+                </button>
+              </div>
+              <div className="h-72 w-full">
+                {departamentosVisibles.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={departamentosVisibles}
+                      layout="vertical"
+                      margin={{ top: 0, right: 20, left: 15, bottom: 0 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e2e8f0" />
+                      <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 12 }} stroke="#94a3b8" />
+                      <YAxis type="category" dataKey="nombre" width={115} tick={{ fontSize: 11 }} stroke="#94a3b8" />
+                      <Tooltip formatter={(value) => [`${value}%`, 'Riesgo']} />
+                      <Bar dataKey="riesgo" name="Riesgo" fill="#3b82f6" radius={[0, 6, 6, 0]} barSize={26} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="h-full flex items-center justify-center text-sm text-slate-400">
+                    Sin evaluaciones por departamento disponibles.
+                  </div>
+                )}
+              </div>
+            </TarjetaGrafica>
 
-        {/* RIESGO POR DEPARTAMENTO */}
-        <TarjetaGrafica>
-          <div className="flex justify-between items-center mb-4">
-             <h3 className="text-lg font-bold text-slate-800">Riesgo por departamento</h3>
-             <button 
-              onClick={() => exportToCSV(departamentosVisibles, 'riesgo_por_departamento')}
-              className="text-xs font-medium text-[#1E3A5F] hover:text-[#172A47] flex items-center gap-1 transition-colors"
-            >
-              <Download size={14}/> Exportar CSV
-            </button>
-          </div>
-          <div className="h-72 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={departamentosVisibles}
-                layout="vertical"
-                margin={{ top: 0, right: 20, left: 15, bottom: 0 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e2e8f0" />
-                <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 12 }} stroke="#94a3b8" />
-                <YAxis type="category" dataKey="nombre" width={115} tick={{ fontSize: 11 }} stroke="#94a3b8" />
-                <Tooltip formatter={(value) => [`${value}%`, 'Riesgo']} />
-                <Bar dataKey="riesgo" name="Riesgo" fill="#3b82f6" radius={[0, 6, 6, 0]} barSize={26} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-          {/* PENDIENTE:
-              Reemplazar departamentosVisibles por los resultados
-              de la API de análisis por departamento. */}
-        </TarjetaGrafica>
+            {/* FACTORES DE RIESGO */}
+            <TarjetaGrafica>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-bold text-slate-800">Factores de riesgo</h3>
+                <button
+                  type="button"
+                  onClick={() => exportToCSV(factoresVisibles, 'factores_riesgo')}
+                  className="text-xs font-medium text-[#1E3A5F] hover:text-[#172A47] flex items-center gap-1 transition-colors"
+                >
+                  <Download size={14} /> Exportar CSV
+                </button>
+              </div>
+              <div className="h-72 w-full">
+                {factoresVisibles.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={factoresVisibles}
+                      margin={{ top: 10, right: 10, left: -15, bottom: 30 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                      <XAxis dataKey="nombre" interval={0} angle={-20} textAnchor="end" height={65} tick={{ fontSize: 10 }} stroke="#94a3b8" />
+                      <YAxis domain={[0, 100]} tick={{ fontSize: 12 }} stroke="#94a3b8" />
+                      <Tooltip formatter={(value) => [`${value}%`, 'Índice']} />
+                      <Bar dataKey="valor" name="Índice" fill="#8b5cf6" radius={[6, 6, 0, 0]} barSize={32} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="h-full flex items-center justify-center text-sm text-slate-400">
+                    Sin datos de factores evaluados para esta selección.
+                  </div>
+                )}
+              </div>
+            </TarjetaGrafica>
+          </section>
 
-        {/* FACTORES DE RIESGO */}
-        <TarjetaGrafica>
-          <div className="flex justify-between items-center mb-4">
-             <h3 className="text-lg font-bold text-slate-800">Factores de riesgo</h3>
-             <button 
-              onClick={() => exportToCSV(factoresVisibles, 'factores_riesgo')}
-              className="text-xs font-medium text-[#1E3A5F] hover:text-[#172A47] flex items-center gap-1 transition-colors"
-            >
-              <Download size={14}/> Exportar CSV
-            </button>
-          </div>
-          <div className="h-72 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={factoresVisibles}
-                margin={{ top: 10, right: 10, left: -15, bottom: 30 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                <XAxis dataKey="nombre" interval={0} angle={-20} textAnchor="end" height={65} tick={{ fontSize: 10 }} stroke="#94a3b8" />
-                <YAxis domain={[0, 100]} tick={{ fontSize: 12 }} stroke="#94a3b8" />
-                <Tooltip formatter={(value) => [`${value}%`, 'Índice']} />
-                <Bar dataKey="valor" name="Índice" fill="#8b5cf6" radius={[6, 6, 0, 0]} barSize={32} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-          {/* PENDIENTE:
-              Los factores deben corresponder a las dimensiones
-              realmente evaluadas en los cuestionarios del proyecto.
-              DESPUÉS: recibirlos del endpoint de análisis de factores. */}
-        </TarjetaGrafica>
+          {/* TABLA DE ÁREAS PRIORITARIAS */}
+          <section className="overflow-hidden rounded-2xl border border-white/10 bg-white shadow-lg mb-6">
+            <div className="border-b border-slate-100 p-6 flex flex-col sm:flex-row justify-between sm:items-center gap-2">
+              <h2 className="font-bold text-slate-800 flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-amber-500" /> Áreas que requieren seguimiento
+              </h2>
+              <p className="text-sm text-slate-500">
+                Priorización basada en los resultados registrados de la NOM-035.
+              </p>
+            </div>
 
-      </section>
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[520px] text-left text-sm">
+                <thead className="bg-slate-50 text-xs uppercase text-slate-500">
+                  <tr>
+                    <th className="px-6 py-4 font-semibold">Departamento</th>
+                    <th className="px-6 py-4 font-semibold">Índice</th>
+                    <th className="px-6 py-4 font-semibold">Nivel NOM-035</th>
+                  </tr>
+                </thead>
 
-      {/* TABLA DE AREAS PRIORITARIAS */}
-      <section className="overflow-hidden rounded-2xl border border-white/10 bg-white shadow-lg mb-6">
+                <tbody className="divide-y divide-slate-100">
+                  {departamentosVisibles.length > 0 ? (
+                    [...departamentosVisibles]
+                      .sort((a, b) => b.riesgo - a.riesgo)
+                      .map((item, idx) => {
+                        const nivel =
+                          item.riesgo >= 60
+                            ? { texto: item.nivel_texto || 'Alto', estilo: 'bg-red-100 text-red-700' }
+                            : item.riesgo >= 40
+                              ? { texto: item.nivel_texto || 'Medio', estilo: 'bg-amber-100 text-amber-700' }
+                              : { texto: item.nivel_texto || 'Bajo', estilo: 'bg-emerald-100 text-emerald-700' };
 
-        <div className="border-b border-slate-100 p-6 flex justify-between items-center">
-          <h2 className="font-bold text-slate-800 flex items-center gap-2">
-            <AlertTriangle className="w-5 h-5 text-amber-500"/> Áreas que requieren seguimiento
-          </h2>
-          <p className="text-sm text-slate-500">
-            Referencia visual para priorizar futuras medidas preventivas.
-          </p>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[520px] text-left text-sm">
-            <thead className="bg-slate-50 text-xs uppercase text-slate-500">
-              <tr>
-                <th className="px-6 py-4 font-semibold">Departamento</th>
-                <th className="px-6 py-4 font-semibold">Índice</th>
-                <th className="px-6 py-4 font-semibold">Nivel ilustrativo</th>
-              </tr>
-            </thead>
-
-            <tbody className="divide-y divide-slate-100">
-              {[...departamentosVisibles]
-                .sort((a, b) => b.riesgo - a.riesgo)
-                .map((item) => {
-                  // POR LO MIENTRAS:
-                  // Estas condiciones clasifican índices de ejemplo.
-                  // DESPUÉS: usar los criterios aprobados para el indicador
-                  // que corresponda. No equivalen automáticamente a una
-                  // clasificación oficial de la NOM-035.
-
-                  const nivel =
-                    item.riesgo >= 60
-                      ? { texto: 'Alto', estilo: 'bg-red-100 text-red-700' }
-                      : item.riesgo >= 40
-                        ? { texto: 'Medio', estilo: 'bg-amber-100 text-amber-700' }
-                        : { texto: 'Bajo', estilo: 'bg-emerald-100 text-emerald-700' };
-
-                  return (
-                    <tr key={item.nombre} className="transition hover:bg-slate-50">
-                      <td className="px-6 py-4 font-medium text-slate-700">{item.nombre}</td>
-                      <td className="px-6 py-4 text-slate-600">{item.riesgo}%</td>
-                      <td className="px-6 py-4">
-                        <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${nivel.estilo}`}>
-                          {nivel.texto}
-                        </span>
+                        return (
+                          <tr key={item.id || `${item.nombre}-${idx}`} className="transition hover:bg-slate-50">
+                            <td className="px-6 py-4 font-medium text-slate-700">{item.nombre}</td>
+                            <td className="px-6 py-4 text-slate-600">{item.riesgo}%</td>
+                            <td className="px-6 py-4">
+                              <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${nivel.estilo}`}>
+                                {nivel.texto}
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      })
+                  ) : (
+                    <tr>
+                      <td colSpan="3" className="px-6 py-8 text-center text-slate-400">
+                        No hay áreas con evaluaciones registradas para los filtros actuales.
                       </td>
                     </tr>
-                  );
-                })}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Aun no esta:
-            Cuando tengamos el backend, esta tabla utilizará
-            los datos reales y los permisos del usuario autenticado. */}
-
-      </section>
-
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </>
+      )}
     </main>
   );
 }

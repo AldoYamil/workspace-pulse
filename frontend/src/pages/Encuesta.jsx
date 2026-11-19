@@ -1,13 +1,30 @@
-import { useState, useEffect } from 'react';
+// src/pages/Encuesta.jsx
+import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Send, ShieldCheck, Info, AlertCircle, Loader2 } from 'lucide-react';
-import api from '../api/axios';
+import { Send, ShieldCheck, Info, AlertCircle, Loader2, Activity } from 'lucide-react';
+import { encuestaService } from '../services/encuestaService';
 
 export default function Encuesta() {
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token');
+  const guiaParam = searchParams.get('guia');
   const campanaParam = searchParams.get('campana') || searchParams.get('surveyId');
   const areaParam = searchParams.get('area');
+
+  // Respaldo: si la URL viene solo con ?token=..., recupera la guía vinculada al crear el QR
+  const savedMeta = useMemo(() => {
+    if (!token) return {};
+    try {
+      const map = JSON.parse(localStorage.getItem('wp_qr_encuestas') || '{}');
+      return map[token] || {};
+    } catch {
+      return {};
+    }
+  }, [token]);
+
+  const guiaFinal = guiaParam || savedMeta.guiaId || undefined;
+  const campanaFinal = campanaParam || savedMeta.campanaId || undefined;
+  const areaFinal = areaParam || savedMeta.areaId || undefined;
 
   const [survey, setSurvey] = useState(null);
   const [answers, setAnswers] = useState({});
@@ -18,20 +35,22 @@ export default function Encuesta() {
 
   useEffect(() => {
     const cargarEncuesta = async () => {
+      setLoading(true);
+      setError('');
+
       try {
-        setLoading(true);
-        setError('');
-        const { data } = await api.get('v1/encuesta-publica/', {
-          params: {
-            token: token || undefined,
-            campana: campanaParam || undefined,
-            area: areaParam || undefined,
-          },
+        const data = await encuestaService.getEncuestaPublica({
+          token: token || undefined,
+          guia: guiaFinal,
+          campana: campanaFinal,
+          area: areaFinal,
         });
         setSurvey(data);
       } catch (err) {
+        const errData = err.response?.data;
         setError(
-          err.response?.data?.detail ||
+          errData?.detail ||
+            (typeof errData === 'string' ? errData : null) ||
             'No se pudo cargar la encuesta. Verifica que el enlace o código QR sea válido.'
         );
       } finally {
@@ -40,7 +59,7 @@ export default function Encuesta() {
     };
 
     cargarEncuesta();
-  }, [token, campanaParam, areaParam]);
+  }, [token, guiaFinal, campanaFinal, areaFinal]);
 
   const handleAnswer = (questionId, value) => {
     setAnswers((prev) => ({ ...prev, [questionId]: value }));
@@ -52,23 +71,26 @@ export default function Encuesta() {
       return;
     }
 
-    try {
-      setSubmitting(true);
-      const payload = {
-        token: token || undefined,
-        campana_id: survey.campana_id,
-        area_id: survey.area_id,
-        respuestas: Object.entries(answers).map(([preguntaId, valor]) => ({
-          pregunta_id: Number(preguntaId),
-          valor: Number(valor),
-        })),
-      };
+    setSubmitting(true);
+    const payload = {
+      token: token || undefined,
+      guia_id: survey.guia_id || guiaFinal,
+      campana_id: survey.campana_id,
+      area_id: survey.area_id,
+      respuestas: Object.entries(answers).map(([preguntaId, valor]) => ({
+        pregunta_id: Number(preguntaId),
+        valor: Number(valor),
+      })),
+    };
 
-      await api.post('v1/encuesta-publica/responder/', payload);
+    try {
+      await encuestaService.responderEncuestaPublica(payload);
       setIsSubmitted(true);
     } catch (err) {
+      const errData = err.response?.data;
       alert(
-        err.response?.data?.detail ||
+        errData?.detail ||
+          (typeof errData === 'string' ? errData : null) ||
           'Ocurrió un error al guardar tus respuestas. Intenta de nuevo.'
       );
     } finally {
@@ -134,17 +156,15 @@ export default function Encuesta() {
     );
   }
 
-  const totalPreguntas = survey.questions.length;
+  const totalPreguntas = survey.questions?.length || 0;
   const respondidas = Object.keys(answers).length;
   const completo = totalPreguntas > 0 && respondidas === totalPreguntas;
 
   // VISTA DEL CUESTIONARIO
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex flex-col">
-      {/* BARRA SUPERIOR MINIMALISTA */}
       <header className="bg-white/80 backdrop-blur-md border-b border-slate-200 px-6 py-4 flex items-center justify-between sticky top-0 z-10">
         <div className="flex items-center gap-3">
-          {/* LOGO ACTUALIZADO PARA COINCIDIR CON DASHBOARDLAYOUT */}
           <div className="w-10 h-10 bg-[#1E3A5F] rounded-xl flex items-center justify-center text-white shadow-md">
             <Activity className="w-6 h-6" />
           </div>
@@ -156,16 +176,13 @@ export default function Encuesta() {
         </div>
       </header>
 
-      {/* CONTENIDO CENTRAL */}
       <main className="flex-1 flex items-center justify-center p-6">
         <div className="bg-white rounded-3xl shadow-xl w-full max-w-3xl overflow-hidden border border-slate-100 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          {/* HEADER DEL CUESTIONARIO */}
           <div className="bg-[#1E3A5F] p-8 text-white relative overflow-hidden">
             <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2"></div>
             <h1 className="text-2xl md:text-3xl font-bold mb-2 relative z-10">{survey.title}</h1>
             <p className="text-blue-100 relative z-10">{survey.description}</p>
 
-            {/* Barra de progreso */}
             <div className="mt-6 h-1.5 bg-blue-900/30 rounded-full overflow-hidden">
               <div
                 className="h-full bg-emerald-400 transition-all duration-500 ease-out"
@@ -179,7 +196,6 @@ export default function Encuesta() {
             </p>
           </div>
 
-          {/* AVISO LEGAL DE ANONIMATO */}
           <div className="bg-amber-50 border-b border-amber-100 px-8 py-4 flex gap-3 items-start">
             <Info className="text-amber-600 shrink-0 mt-0.5" size={18} />
             <p className="text-sm text-amber-800 leading-snug">
@@ -190,7 +206,6 @@ export default function Encuesta() {
             </p>
           </div>
 
-          {/* PREGUNTAS */}
           <div className="p-8 space-y-8">
             {survey.questions.map((q, index) => (
               <div key={q.id} className="space-y-4 group">
@@ -201,7 +216,6 @@ export default function Encuesta() {
                   <p className="text-slate-800 font-semibold text-lg pt-1">{q.text}</p>
                 </div>
 
-                {/* ESCALA LIKERT 1-5 */}
                 <div className="grid grid-cols-5 gap-2 ml-12">
                   {[1, 2, 3, 4, 5].map((val) => (
                     <button
@@ -219,7 +233,6 @@ export default function Encuesta() {
                   ))}
                 </div>
 
-                {/* Etiquetas de la escala */}
                 <div className="flex justify-between ml-12 px-2 text-[10px] text-slate-400 uppercase tracking-wider font-medium">
                   <span>Nunca</span>
                   <span>Casi nunca</span>
@@ -237,7 +250,6 @@ export default function Encuesta() {
             )}
           </div>
 
-          {/* FOOTER CON BOTÓN DE ENVÍO */}
           <div className="p-8 border-t border-slate-100 bg-slate-50/50 flex justify-end">
             <button
               type="button"
@@ -256,7 +268,6 @@ export default function Encuesta() {
         </div>
       </main>
 
-      {/* FOOTER LEGAL MINIMALISTA */}
       <footer className="py-6 text-center text-xs text-slate-400">
         © 2026 WorkSpace Pulse · Cumplimiento NOM-035-STPS-2018 · Datos cifrados y anonimizados
       </footer>
