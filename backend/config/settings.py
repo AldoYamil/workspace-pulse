@@ -36,7 +36,7 @@ GROQ_MODEL = config('GROQ_MODEL', default='openai/gpt-oss-120b')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["127.0.0.1", "localhost", "10.227.9.109", "*"]
 
 # Configuración de autenticación con Supabase.
 SUPABASE_JWT_SECRET = config('SUPABASE_JWT_SECRET', default='')

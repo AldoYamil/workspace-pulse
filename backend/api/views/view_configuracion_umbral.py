@@ -2,6 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
+from api.permissions import EsAdminOGerenteRH
 
 from django.contrib.auth.models import User
 
@@ -19,7 +20,7 @@ class CreateConfiguracionUmbralApiView(generics.CreateAPIView):
 
 ##List
 class ListConfiguracionUmbralApiView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [EsAdminOGerenteRH]
     def get(self, request, centro_id):
         usuario_logueado = request.user
         empresa_id = usuario_logueado.centrotrabajo.empresa_id
@@ -32,7 +33,7 @@ class ListConfiguracionUmbralApiView(APIView):
 
 ##Detail
 class DetailConfiguracionUmbralApiView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [EsAdminOGerenteRH]
     def get(self, request, id):
         usuario_logueado = request.user
         empresa_id = usuario_logueado.centrotrabajo.empresa_id

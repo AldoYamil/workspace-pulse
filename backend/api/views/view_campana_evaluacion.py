@@ -3,6 +3,7 @@ from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import generics, status
+from api.permissions import EsAdminOGerenteRH
 
 from django.contrib.auth.models import User
 
@@ -26,6 +27,7 @@ class CreateCampanaEvaluacionApiView(generics.CreateAPIView):
 
 ##List
 class ListCampanaEvaluacionApiView(APIView):
+    permission_classes = [EsAdminOGerenteRH]
     def get(self, request, guia_id, centro_id):
         campanas = Campana_evaluacion.objects.filter(
             guia_referencia_id=guia_id,
@@ -36,6 +38,7 @@ class ListCampanaEvaluacionApiView(APIView):
     
 ##Detail
 class DetailCampanaEvaluacionApiView(APIView):
+    permission_classes = [EsAdminOGerenteRH]
     def get(self, request, id):
         guia_id = request.query_params.get('guia_id')
         centro_id = request.query_params.get('centro_id')

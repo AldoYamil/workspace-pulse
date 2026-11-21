@@ -2,6 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
+from api.permissions import EsAdminOGerenteRH
 
 from django.contrib.auth.models import User
 
@@ -22,7 +23,7 @@ class CreateTouchpointApiView(generics.CreateAPIView):
 
 #List
 class ListTouchpointApiView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [EsAdminOGerenteRH]
     def get(self, request):
         usuario_logueado = request.user
         perfil = Usuario.objects.select_related('centro_trabajo').filter(email=request.user.email).first()
@@ -51,7 +52,7 @@ class ListTouchpointApiView(APIView):
 
 #Detail
 class DetailTouchpointApiView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [EsAdminOGerenteRH]
     def get(self, request, touchpoint_id):
         usuario_logueado = request.user
         empresa_id = usuario_logueado.centrotrabajo.empresa_id

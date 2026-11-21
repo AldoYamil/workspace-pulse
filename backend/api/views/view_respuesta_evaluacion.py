@@ -8,6 +8,9 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from datetime import date, timedelta
+from django.utils import timezone
+import random
+from urllib.parse import urlparse, parse_qs
 
 from api.serializers import respuesta_evaluacion_serializer
 from api.models.respuesta_evaluacion_model import Respuesta_evaluacion
@@ -341,4 +344,156 @@ class ResponderEncuestaPublicaView(APIView):
             return Response(
                 {"detail": f"Error al guardar en BD: {exc}"},
                 status=status.HTTP_400_BAD_REQUEST,
+            )
+
+class SimularEncuestasMasivasView(APIView):
+    authentication_classes = []
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        modo = str(request.data.get("modo", "simple")).lower()
+        cantidad = min(int(request.data.get("cantidad", 150)), 1000)
+
+        Area = _m("Area")
+        Pregunta = _m("Pregunta")
+        DetalleRespuesta = _m("DetalleRespuesta")
+        ResultadoRiesgo = _m("ResultadoRiesgo")
+        GuiaReferencia = Pregunta._meta.get_field("guia_referencia").related_model
+
+        columnas_detalle = {f.name: f for f in DetalleRespuesta._meta.fields}
+        fk_resp_detalle = "respuesta_evaluacion" if "respuesta_evaluacion" in columnas_detalle else "respuesta"
+        campos_riesgo = {f.name for f in ResultadoRiesgo._meta.get_fields()}
+        fk_campana_riesgo = "campana_evaluacion" if "campana_evaluacion" in campos_riesgo else "campana"
+
+        if modo == "variado" or request.data.get("variado"):
+            areas = list(Area.objects.all())
+            guias = list(GuiaReferencia.objects.all())
+            if not areas or not guias:
+                return Response(
+                    {"detail": "No hay áreas o guías registradas para simular."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            perfiles_por_area = [
+                ("bajo", [45, 35, 12, 5, 3]),    
+                ("mixto", [22, 28, 25, 15, 10]), 
+                ("alto", [8, 12, 22, 33, 25]),
+                ("critico", [3, 7, 15, 35, 40]),
+            ]
+
+            ahora = timezone.now()
+            total_creados = 0
+
+            campos_eval = {f.name: f for f in Respuesta_evaluacion._meta.fields}
+            campo_fecha_eval = next(
+                (c for c in ("fecha_respuesta", "fecha_creacion", "created_at", "fecha") if c in campos_eval),
+                None,
+            )
+
+            with transaction.atomic():
+                detalles_totales = []
+
+                for idx_area, area in enumerate(areas):
+                    _, pesos = perfiles_por_area[idx_area % len(perfiles_por_area)]
+                    for guia in guias[:6]:
+                        preguntas = list(Pregunta.objects.filter(guia_referencia_id=guia.id))
+                        if not preguntas:
+                            continue
+
+                        campana, _, centro, puesto, touchpoint = _resolver_contexto(
+                            area_id=area.id, guia_id=guia.id
+                        )
+                        if not campana or not centro or not puesto or not touchpoint:
+                            continue
+
+                        lote = max(5, cantidad // max(1, len(areas) * min(len(guias), 6)))
+
+                        for i in range(lote):
+                            # Repartir aleatoriamente en los últimos 175 días (Jun - Nov)
+                            dias_atras = random.randint(0, 175)
+                            fecha_sim = ahora - timedelta(days=dias_atras)
+
+                            evaluacion = Respuesta_evaluacion.objects.create(
+                                respuesta="[]",
+                                campana=campana,
+                                centro_trabajo=centro,
+                                puesto=puesto,
+                                touchpoint=touchpoint,
+                                area=area,
+                            )
+
+                            if campo_fecha_eval:
+                                Respuesta_evaluacion.objects.filter(id=evaluacion.id).update(
+                                    **{campo_fecha_eval: fecha_sim}
+                                )
+
+                            respuestas_sim = []
+                            for p in preguntas:
+                                valor = random.choices([1, 2, 3, 4, 5], weights=pesos, k=1)[0]
+                                ponderado = round((valor - 1) * 2.5, 2)
+                                respuestas_sim.append({"pregunta_id": p.id, "valor": valor})
+
+                                kwargs_det = {fk_resp_detalle: evaluacion, "pregunta": p}
+                                if "valor_ponderado" in columnas_detalle:
+                                    kwargs_det["valor_ponderado"] = ponderado
+                                for candidato in ("valor_respuesta", "valor", "puntuacion", "respuesta_num"):
+                                    if candidato in columnas_detalle:
+                                        kwargs_det[candidato] = valor
+                                        break
+                                detalles_totales.append(DetalleRespuesta(**kwargs_det))
+
+                            evaluacion.respuesta = json.dumps(respuestas_sim, ensure_ascii=False)
+                            evaluacion.save(update_fields=["respuesta"])
+                            total_creados += 1
+
+                        if "valor_ponderado" in columnas_detalle:
+                            promedio = (
+                                DetalleRespuesta.objects.filter(
+                                    **{
+                                        f"{fk_resp_detalle}__campana": campana,
+                                        f"{fk_resp_detalle}__area": area,
+                                    }
+                                ).aggregate(p=Avg("valor_ponderado"))["p"]
+                                or 0
+                            )
+                            if promedio == 0 and detalles_totales:
+                                ultimos = [d.valor_ponderado for d in detalles_totales[-len(preguntas) * lote :]]
+                                promedio = sum(ultimos) / len(ultimos)
+                            puntuacion = round(promedio * 10, 1)
+                        else:
+                            puntuacion = round(random.uniform(20, 82), 1)
+
+                        if puntuacion >= 75:
+                            nivel = "Muy alto"
+                        elif puntuacion >= 50:
+                            nivel = "Alto"
+                        elif puntuacion >= 25:
+                            nivel = "Medio"
+                        else:
+                            nivel = "Bajo"
+
+                        filtro_riesgo = {fk_campana_riesgo: campana, "area": area}
+                        if "puesto" in campos_riesgo:
+                            filtro_riesgo["puesto"] = puesto
+
+                        ResultadoRiesgo.objects.update_or_create(
+                            **filtro_riesgo,
+                            defaults={"puntuacion_riesgo": puntuacion, "nivel_riesgo": nivel},
+                        )
+
+                DetalleRespuesta.objects.bulk_create(detalles_totales, batch_size=1000)
+
+            for c_id in set(Area.objects.values_list("centro_trabajo_id", flat=True)):
+                if c_id:
+                    evaluar_umbrales(centro_id=c_id)
+
+            return Response(
+                {
+                    "status": "ok",
+                    "modo": "variado",
+                    "simulados": total_creados,
+                    "areas_cubiertas": len(areas),
+                    "guias_cubiertas": min(len(guias), 6),
+                },
+                status=status.HTTP_201_CREATED,
             )
