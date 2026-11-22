@@ -1,5 +1,6 @@
 // src/pages/AdminDashboard.jsx
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
   PieChart, Pie, Cell 
@@ -47,6 +48,7 @@ const exportToCSV = (data, filename) => {
 };
 
 export default function AdminDashboard() {
+  const navigate = useNavigate();
   const [filterSede, setFilterSede] = useState('Todas');
 
   return (
@@ -94,7 +96,10 @@ export default function AdminDashboard() {
             </div>
           </button>
 
-          <button className="bg-[#1E3A5F] p-4 rounded-xl shadow-lg hover:bg-[#172A47] transition-all flex items-center gap-3 text-white border border-white/10">
+          <button 
+            onClick={() => navigate('/admin/planes-accion')} 
+            className="bg-[#1E3A5F] p-4 rounded-xl shadow-lg hover:bg-[#172A47] transition-all flex items-center gap-3 text-white border border-white/10 cursor-pointer"
+          >
             <div className="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center">
               <TrendingUp size={20}/>
             </div>
