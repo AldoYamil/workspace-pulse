@@ -5,6 +5,7 @@ from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, status
 from rest_framework.permissions import AllowAny
+from accounts.permissions import PersonalRH, SoloGestion, CualquierRol
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from datetime import date, timedelta
@@ -25,12 +26,15 @@ def _m(nombre):
 
 ## CREATE
 class CreateRespuestaEvaluacionApiView(generics.CreateAPIView):
+    permission_classes = [CualquierRol]
     queryset = Respuesta_evaluacion.objects.all()
     serializer_class = respuesta_evaluacion_serializer.CreateRespuestaEvaluacionSerializer
 
 
 ## READ
 class ListRespuestaEvaluacionApiView(APIView):
+    permission_classes = [PersonalRH]
+
     def get(self, request):
         campana_id = request.query_params.get("campana_id")
         area_id = request.query_params.get("area_id")
@@ -47,6 +51,8 @@ class ListRespuestaEvaluacionApiView(APIView):
 
 
 class DetailRespuestaEvaluacionApiView(APIView):
+    permission_classes = [PersonalRH]
+
     def get(self, request, id):
         respuesta = get_object_or_404(Respuesta_evaluacion, pk=id)
         data = respuesta_evaluacion_serializer.DetailRespuestaEvaluacionSerializer(respuesta).data
@@ -146,43 +152,6 @@ def _resolver_contexto(token=None, campana_id=None, area_id=None, guia_id=None):
 
     return None, None, None, None, None
 
-
-class EncuestaPublicaDetalleView(APIView):
-    """GET /api/v1/encuesta-publica/?token=... o ?campana=...&area=..."""
-    authentication_classes = []
-    permission_classes = [AllowAny]
-
-    def get(self, request):
-        token = request.query_params.get("token")
-        campana_id = request.query_params.get("campana") or request.query_params.get("surveyId")
-        area_id = request.query_params.get("area")
-
-        campana, area, _, _, _ = _resolver_contexto(token=token, campana_id=campana_id, area_id=area_id)
-        if not campana or not area:
-            return Response(
-                {"detail": "El enlace o código QR de la encuesta no es válido."},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-
-        preguntas = _m("Pregunta").objects.filter(
-            guia_referencia_id=campana.guia_referencia_id
-        ).order_by("id")
-
-        return Response({
-            "campana_id": campana.id,
-            "area_id": area.id,
-            "area_nombre": area.nombre,
-            "title": getattr(campana, "nombre", f"Evaluación #{campana.id}"),
-            "description": getattr(campana.guia_referencia, "descripcion", "Cuestionario NOM-035-STPS-2018"),
-            "questions": [
-                {
-                    "id": p.id,
-                    "text": getattr(p, "texto_pregunta", None) or getattr(p, "texto", str(p)),
-                    "dominio": getattr(p, "dominio", ""),
-                }
-                for p in preguntas
-            ],
-        }, status=status.HTTP_200_OK)
 
 class EncuestaPublicaDetalleView(APIView):
     """GET /api/v1/encuesta-publica/?token=...&guia=...&campana=...&area=..."""
@@ -347,8 +316,7 @@ class ResponderEncuestaPublicaView(APIView):
             )
 
 class SimularEncuestasMasivasView(APIView):
-    authentication_classes = []
-    permission_classes = [AllowAny]
+    permission_classes = [SoloGestion]
 
     def post(self, request):
         modo = str(request.data.get("modo", "simple")).lower()

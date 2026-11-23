@@ -5,8 +5,10 @@ from django.contrib.auth.models import Group, User
 from rest_framework.authentication import BaseAuthentication
 from rest_framework.exceptions import AuthenticationFailed
 
-
 jwks_client = PyJWKClient(settings.SUPABASE_JWKS_URL)
+
+ROLES = ('administrador', 'gerente_rh', 'asistente_rh', 'usuario')
+ROL_POR_DEFECTO = 'usuario'
 
 
 class SupabaseAuthentication(BaseAuthentication):
@@ -24,7 +26,7 @@ class SupabaseAuthentication(BaseAuthentication):
             payload = jwt.decode(
                 token,
                 signing_key.key,
-                algorithms=['HS256', 'RS256', 'ES256'],
+                algorithms=['RS256', 'ES256'],
                 audience='authenticated',
                 leeway=5,
                 options={'require': ['exp', 'sub']},
@@ -46,20 +48,19 @@ class SupabaseAuthentication(BaseAuthentication):
         if not supabase_uid:
             raise AuthenticationFailed('El token no contiene un usuario.')
 
-        user_meta = payload.get('user_metadata') or {}
-        app_meta = payload.get('app_metadata') or {}
-        rol = str(user_meta.get('rol') or app_meta.get('rol') or 'asistente_rh').lower()
-
         user, _ = User.objects.get_or_create(
             username=supabase_uid,
             defaults={'email': email},
         )
 
-        if rol in ('administrador', 'gerente_rh', 'asistente_rh'):
-            grupo, _ = Group.objects.get_or_create(name=rol)
-            if not user.groups.filter(name=rol).exists():
-                user.groups.clear()
-                user.groups.add(grupo)
+        # El rol sale de la base de datos (Groups), NO del token.
+        grupo_actual = user.groups.filter(name__in=ROLES).first()
+        if grupo_actual is None:
+            grupo, _ = Group.objects.get_or_create(name=ROL_POR_DEFECTO)
+            user.groups.add(grupo)
+            rol = ROL_POR_DEFECTO
+        else:
+            rol = grupo_actual.name
 
         user.rol = rol
 

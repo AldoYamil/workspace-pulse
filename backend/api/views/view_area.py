@@ -2,7 +2,7 @@ from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import generics, status
-from rest_framework.permissions import IsAuthenticated
+from accounts.permissions import PersonalRH, SoloGestion, CualquierRol
 
 from django.contrib.auth.models import User
 
@@ -20,7 +20,7 @@ def get_usuario_perfil(user_auth):
 
 ##CREATE
 class CreateAreaApiView(generics.CreateAPIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [PersonalRH]
     queryset = Area.objects.all()
     serializer_class = area_serializer.CreateAreaSerializer
 
@@ -28,7 +28,7 @@ class CreateAreaApiView(generics.CreateAPIView):
 
 ##List
 class ListAreaApiView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [PersonalRH]
     def get(self, request):
         usuario_logueado = request.user
         usuario_perfil = getattr(usuario_logueado, 'usuario', None)
@@ -53,7 +53,7 @@ class ListAreaApiView(APIView):
 
 ##Detail
 class DetailAreaApiView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [PersonalRH]
     def get(self, request, id):
         usuario_logueado = request.user
         usuario_perfil = getattr(usuario_logueado, 'usuario', None)
@@ -78,7 +78,7 @@ class DetailAreaApiView(APIView):
 
 ##UPDATE
 class UpdateAreaApiView(generics.UpdateAPIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [PersonalRH]
     queryset = Area.objects.all()
     serializer_class = area_serializer.UpdateAreaSerializerByEmpresa
     def get_queryset(self):
@@ -91,7 +91,7 @@ class UpdateAreaApiView(generics.UpdateAPIView):
 
 ##DELETE
 class DeleteAreaApiView(generics.DestroyAPIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [PersonalRH]
     queryset = Area.objects.all()
     serializer_class = area_serializer.DeleteAreaSerializerByEmpresa
     def get_queryset(self):

@@ -47,7 +47,7 @@ REST_FRAMEWORK = {
         'api.authentication.SupabaseAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated',
+        'accounts.permissions.PersonalRH',
     ),
 }
 
@@ -66,7 +66,8 @@ INSTALLED_APPS = [
     'corsheaders',
 
     #APLICACIONES
-    'api'
+    'api',
+     "accounts",
 ]
 
 MIDDLEWARE = [
@@ -110,7 +111,7 @@ DATABASES = {
         'USER': 'user_demo',
         'PASSWORD': 'password_demo',
         'HOST': '127.0.0.1',
-        'PORT': '5432',  # Coincide con el nuevo puerto de Docker
+        'PORT': '5433',  # Coincide con el nuevo puerto de Docker
     }
 }
 

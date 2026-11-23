@@ -19,11 +19,13 @@ import {
   FileText,
 } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
+import { useRol, ETIQUETAS_ROL, INICIALES_ROL } from '../context/AuthContext';
 
 export default function DashboardLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false); // Estado para el dropdown
+  const { rol, puedeAcceder } = useRol();
 
   const handleLogout = async () => {
     if (!supabase) {
@@ -42,19 +44,24 @@ export default function DashboardLayout() {
   };
 
   // Menú con las rutas definidas en App.jsx.
+  // acceso: 'rh' = Administrador, Gerente y Asistente
+  //         'gestion' = solo Administrador y Gerente
   const menuItems = [
-    { name: 'Dashboard Ejecutivo', path: '/admin/dashboard', icon: LayoutDashboard },
-    { name: 'Gestión Organizacional', path: '/admin/organizacion', icon: Building2 },
-    { name: 'Encuestas Aplicadas', path: '/admin/encuestas-aplicadas', icon: Users },
-    { name: 'Riesgos Psicosociales', path: '/admin/riesgos', icon: ShieldAlert },
-    { name: 'Cuestionario activo', path: '/admin/cuestionario', icon: ClipboardList },
-    { name: 'Configuración de Alertas', path: '/admin/alertas', icon: Bell },
-    { name: 'Planes de acción', path: '/admin/planes-accion', icon: ClipboardCheck },
-    { name: 'Reportes de auditoría', path: '/admin/reportes-auditoria', icon: FileSearch },
-    { name: 'Capacitaciones', path: '/admin/capacitaciones', icon: GraduationCap },
-    { name: 'Campañas de Evaluación', path: '/admin/campanas-evaluacion', icon: Megaphone },
-    { name: 'Generador de QR', path: '/admin/touchpointqr', icon: QrCode },
+    { name: 'Dashboard Ejecutivo', path: '/admin/dashboard', icon: LayoutDashboard, acceso: 'rh' },
+    { name: 'Gestión Organizacional', path: '/admin/organizacion', icon: Building2, acceso: 'rh' },
+    { name: 'Encuestas Aplicadas', path: '/admin/encuestas-aplicadas', icon: Users, acceso: 'rh' },
+    { name: 'Riesgos Psicosociales', path: '/admin/riesgos', icon: ShieldAlert, acceso: 'rh' },
+    { name: 'Cuestionario activo', path: '/admin/cuestionario', icon: ClipboardList, acceso: 'gestion' },
+    { name: 'Configuración de Alertas', path: '/admin/alertas', icon: Bell, acceso: 'gestion' },
+    { name: 'Planes de acción', path: '/admin/planes-accion', icon: ClipboardCheck, acceso: 'rh' },
+    { name: 'Reportes de auditoría', path: '/admin/reportes-auditoria', icon: FileSearch, acceso: 'rh' },
+    { name: 'Capacitaciones', path: '/admin/capacitaciones', icon: GraduationCap, acceso: 'rh' },
+    { name: 'Campañas de Evaluación', path: '/admin/campanas-evaluacion', icon: Megaphone, acceso: 'gestion' },
+    { name: 'Generador de QR', path: '/admin/touchpointqr', icon: QrCode, acceso: 'gestion' },
   ];
+
+  // Solo se muestran las opciones que el rol puede usar
+  const menuVisible = menuItems.filter((item) => puedeAcceder(item.acceso));
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-[#1E3A5F] to-slate-900 flex">
@@ -71,7 +78,7 @@ export default function DashboardLayout() {
         </div>
 
         <nav className="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto">
-          {menuItems.map((item) => {
+          {menuVisible.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.path;
 
@@ -143,9 +150,11 @@ export default function DashboardLayout() {
                 className="flex items-center gap-3 bg-slate-50 border border-slate-200/80 px-3.5 py-2 rounded-full shadow-sm hover:bg-slate-100 transition-colors"
               >
                 <div className="w-8 h-8 bg-[#1E3A5F] rounded-full flex items-center justify-center text-white font-bold text-xs">
-                  RH
+                  {INICIALES_ROL[rol] ?? '--'}
                 </div>
-                <span className="text-sm font-semibold text-slate-700">Gerente RH</span>
+                <span className="text-sm font-semibold text-slate-700">
+                  {ETIQUETAS_ROL[rol] ?? 'Usuario'}
+                </span>
                 <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${isMenuOpen ? 'rotate-180' : ''}`} />
               </button>
 

@@ -1,8 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import generics, status
-from rest_framework.permissions import IsAuthenticated
-from api.permissions import EsAdminOGerenteRH
+from accounts.permissions import PersonalRH, SoloGestion, CualquierRol
 
 from django.contrib.auth.models import User
 
@@ -20,7 +19,7 @@ class CreateConfiguracionUmbralApiView(generics.CreateAPIView):
 
 ##List
 class ListConfiguracionUmbralApiView(APIView):
-    permission_classes = [EsAdminOGerenteRH]
+    permission_classes = [SoloGestion]
     def get(self, request, centro_id):
         usuario_logueado = request.user
         empresa_id = usuario_logueado.centrotrabajo.empresa_id
@@ -33,7 +32,7 @@ class ListConfiguracionUmbralApiView(APIView):
 
 ##Detail
 class DetailConfiguracionUmbralApiView(APIView):
-    permission_classes = [EsAdminOGerenteRH]
+    permission_classes = [SoloGestion]
     def get(self, request, id):
         usuario_logueado = request.user
         empresa_id = usuario_logueado.centrotrabajo.empresa_id
@@ -44,7 +43,7 @@ class DetailConfiguracionUmbralApiView(APIView):
 
 ##UPDATE
 class UpdateConfiguracionUmbralApiView(generics.UpdateAPIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [SoloGestion]
     serializer_class = configuracion_umbral_serializer.UpdateConfiguracionUmbralSerializer
     def get_queryset(self):
         empresa_id = self.request.user.centrotrabajo.empresa_id
@@ -52,7 +51,7 @@ class UpdateConfiguracionUmbralApiView(generics.UpdateAPIView):
 
 ##DELETE
 class DeleteConfiguracionUmbralApiView(generics.DestroyAPIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [SoloGestion]
     serializer_class = configuracion_umbral_serializer.DeleteConfiguracionUmbralSerializer
     def get_queryset(self):
         empresa_id = self.request.user.centrotrabajo.empresa_id

@@ -1,8 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import generics, status
-from rest_framework.permissions import IsAuthenticated
-
+from accounts.permissions import SoloGestion
 from django.contrib.auth.models import User
 
 from api.serializers import capacitacion_serializer
@@ -12,14 +11,14 @@ from api.models.centro_trabajo_model import Centro_trabajo
 
 ##CREATE
 class CreateCapacitacionApiView(generics.CreateAPIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [SoloGestion]
     queryset = Capacitacion.objects.all()
     serializer_class = capacitacion_serializer .CreateCapacitacionSerializer
 
 ##READ
 #List
 class ListCapacitacionApiView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [SoloGestion]
     def get(self, request):
         usuario_logeado = request.user
         empresa_id = usuario_logeado.centrotrabajo.empresa_id
@@ -32,7 +31,7 @@ class ListCapacitacionApiView(APIView):
 
 #Detail
 class DetailCapacitacionApiView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [SoloGestion]
     def get(self, request, id):
         usuario_logeado = request.user
         empresa_id = usuario_logeado.centrotrabajo.empresa_id
@@ -44,12 +43,12 @@ class DetailCapacitacionApiView(APIView):
 
 ##UPDATE
 class UpdateCapacitacionApiView(generics.UpdateAPIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [SoloGestion]
     queryset = Capacitacion.objects.all()
     serializer_class = capacitacion_serializer .UpdateCapacitacionSerializer
 
 ##DELETE
 class DeleteCapacitacionApiView(generics.DestroyAPIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [SoloGestion]
     queryset = Capacitacion.objects.all()
     serializer_class = capacitacion_serializer .DeleteCapacitacionSerializer

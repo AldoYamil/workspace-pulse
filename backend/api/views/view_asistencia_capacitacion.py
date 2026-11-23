@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import generics, status
-from rest_framework.permissions import IsAuthenticated
+from accounts.permissions import PersonalRH, SoloGestion, CualquierRol
 
 from django.contrib.auth.models import User
 
@@ -11,14 +11,14 @@ from api.models.centro_trabajo_model import Centro_trabajo
 
 ##CREATE
 class CreateAsistenciaCapacitacionApiView(generics.CreateAPIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [PersonalRH]
     queryset = AsistenciaCapacitacion.objects.all()
     serializer_class = asistencia_capacitacion_serializer.CreateAsistenciaCapacitacionSerializer
 
 ##READ
 #List
 class ListAsistenciaCapacitacionApiView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [PersonalRH]
     def get(self, request):
         usuario_logeado = request.user
         empresa_id = usuario_logeado.centrotrabajo.empresa_id

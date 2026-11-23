@@ -3,7 +3,7 @@ from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import generics, status
-from api.permissions import EsAdminOGerenteRH
+from accounts.permissions import SoloGestion, PersonalRH
 
 from django.contrib.auth.models import User
 
@@ -16,6 +16,7 @@ from api.services.email_service import enviar_correo
 
 ##CREATE
 class CreateCampanaEvaluacionApiView(generics.CreateAPIView):
+    permission_classes = [SoloGestion]
     queryset = Campana_evaluacion.objects.all()
     serializer_class = campana_evaluacion_serializer.CreateCampanaEvaluacionSerializer
 
@@ -27,7 +28,7 @@ class CreateCampanaEvaluacionApiView(generics.CreateAPIView):
 
 ##List
 class ListCampanaEvaluacionApiView(APIView):
-    permission_classes = [EsAdminOGerenteRH]
+    permission_classes = [PersonalRH]
     def get(self, request, guia_id, centro_id):
         campanas = Campana_evaluacion.objects.filter(
             guia_referencia_id=guia_id,
@@ -35,17 +36,17 @@ class ListCampanaEvaluacionApiView(APIView):
         )
         serializer = campana_evaluacion_serializer.ListCampanaEvaluacionSerializer(campanas, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
-    
+
 ##Detail
 class DetailCampanaEvaluacionApiView(APIView):
-    permission_classes = [EsAdminOGerenteRH]
+    permission_classes = [PersonalRH]
     def get(self, request, id):
         guia_id = request.query_params.get('guia_id')
         centro_id = request.query_params.get('centro_id')
-        
+
         if not guia_id or not centro_id:
             return Response(
-                {"error": "El parámetro 'guia_id' o 'centro_id' es requerido."}, 
+                {"error": "El parámetro 'guia_id' o 'centro_id' es requerido."},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -55,14 +56,15 @@ class DetailCampanaEvaluacionApiView(APIView):
 
 ##UPDATE
 class UpdateCampanaEvaluacionApiView(generics.UpdateAPIView):
+    permission_classes = [SoloGestion]
     queryset = Campana_evaluacion.objects.all()
     serializer_class = campana_evaluacion_serializer.UpdateCampanaEvaluacionSerializer
 
 ##DELETE
 class DeleteCampanaEvaluacionApiView(generics.DestroyAPIView):
+    permission_classes = [SoloGestion]
     queryset = Campana_evaluacion.objects.all()
     serializer_class = campana_evaluacion_serializer.DeleteCampanaEvaluacionSerializer
-
 
 
 def notificar_nueva_campana(campana):
@@ -74,7 +76,7 @@ def notificar_nueva_campana(campana):
     )
     if not destinatarios:
         return
-    
+
     enlace_encuesta = f"{settings.FRONTEND_URL.rstrip('/')}/encuesta?campana={campana.id}"
     asunto = f"Nueva Evaluación Disponible: {campana.nombre}"
     html = f"""

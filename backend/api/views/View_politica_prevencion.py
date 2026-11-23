@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import generics, status
-from rest_framework.permissions import IsAuthenticated
+from accounts.permissions import PersonalRH, SoloGestion, CualquierRol
 
 from django.contrib.auth.models import User
 
@@ -12,7 +12,7 @@ from api.models.empresa_model import Empresa
 
 ##CREATE
 class CreatePoliticaPrevencionApiView(generics.CreateAPIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [PersonalRH]
     queryset = Politica_prevencion.objects.all()
     serializer_class = politica_prevencion_serializer.CreatePoliticaPrevencionSerializer
 
@@ -20,7 +20,7 @@ class CreatePoliticaPrevencionApiView(generics.CreateAPIView):
 
 #List
 class ListPoliticaPrevencionApiView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [PersonalRH]
     def get(self, request):
         usuario_logueado = request.user
         empresa_id = usuario_logueado.centrotrabajo.empresa_id
@@ -37,7 +37,7 @@ class ListPoliticaPrevencionApiView(APIView):
 
 #Detail
 class DetailPoliticaPrevencionApiView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [PersonalRH]
     def get(self, request, ploitica_prevencion_id):
         usuario_logueado = request.user
         empresa_id = usuario_logueado.centrotrabajo.empresa_id
@@ -50,12 +50,12 @@ class DetailPoliticaPrevencionApiView(APIView):
 
 ##UPDATE
 class UpdatePoliticaPrevencionApiView(generics.UpdateAPIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [PersonalRH]
     queryset = Politica_prevencion.objects.all()
     serializer_class = politica_prevencion_serializer.UpdatePoliticaPrevencionSerializer
 
 ##DELETE
 class DeletePoliticaPrevencionApiView(generics.DestroyAPIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [PersonalRH]
     queryset = Politica_prevencion.objects.all()
     serializer_class = politica_prevencion_serializer.DeletePoliticaPrevencionSerializer

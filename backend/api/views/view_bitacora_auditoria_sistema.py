@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import generics, status
-from rest_framework.permissions import IsAuthenticated
+from accounts.permissions import PersonalRH, SoloGestion, CualquierRol
 
 from django.contrib.auth.models import User
 
@@ -11,14 +11,14 @@ from api.models.usuario_model import Usuario
 
 ##CREATE
 class CreateBitacoraAuditoriaSistemaApiView(generics.CreateAPIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [PersonalRH]
     queryset = BitacoraAuditoriaSistema.objects.all()
     serializer_class = bitacora_auditoria_sistema_serializer.CreateBitacoraAuditoriaSistemaSerializer
 
 ##READ
 #List
 class ListBitacoraAuditoriaSistemaApiView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [PersonalRH]
     def get(self, request):
         usuario_logeado = request.user
         empresa_id = usuario_logeado.centrotrabajo.empresa_id
@@ -31,7 +31,7 @@ class ListBitacoraAuditoriaSistemaApiView(APIView):
 
 #Detail
 class DetailBitacoraAuditoriaSistemaApiView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [PersonalRH]
     def get(self, request, id):
         usuario_logeado = request.user
         empresa_id = usuario_logeado.centrotrabajo.empresa_id

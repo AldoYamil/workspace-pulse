@@ -1,6 +1,7 @@
-
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 
+import { AuthProvider } from './context/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
 import DashboardLayout from './components/DashboardLayout';
 
 import LandingPage from './pages/LandingPage';
@@ -26,33 +27,43 @@ import TouchpointsQR from './pages/TouchpointsQR';
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/encuesta" element={<Encuesta />} />
-        <Route path="/encuesta-finalizada" element={<EncuestaFinalizada />} />
-        <Route path="/unauthorized" element={<Unauthorized />} />
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          {/* Rutas públicas */}
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/encuesta" element={<Encuesta />} />
+          <Route path="/encuesta-finalizada" element={<EncuestaFinalizada />} />
+          <Route path="/unauthorized" element={<Unauthorized />} />
 
-        <Route path="/admin" element={<DashboardLayout />}>
-          <Route index element={<Navigate to="/admin/dashboard" replace />} />
-          <Route path="perfil" element={<UserProfile />} />
-          <Route path="dashboard" element={<AdminDashboard />} />
-          <Route path="organizacion" element={<OrgManagement />} />
-          <Route path="encuestas-aplicadas" element={<AppliedSurveys />} />
-          <Route path="cuestionario" element={<CuestionarioActivo />} />
-          <Route path="riesgos" element={<PanelRiesgos />} />
-          <Route path="alertas" element={<ConfiguracionAlertas />} />
-          <Route path="planes-accion" element={<PlanesAccion />} />
-          <Route path="reportes-auditoria" element={<ReportesAuditoria />} />
-          <Route path="capacitaciones" element={<Capacitaciones />} />
-          <Route path="campanas-evaluacion" element={<CampanasEvaluacion />} />
-          <Route path="politicas-prevencion" element={<PoliticasPrevencion />} />
-          <Route path="touchpointqr" element={<TouchpointsQR />} />
-        </Route>
+          {/* Panel: Administrador, Gerente y Asistente de RH */}
+          <Route element={<ProtectedRoute acceso="rh" />}>
+            <Route path="/admin" element={<DashboardLayout />}>
+              <Route index element={<Navigate to="/admin/dashboard" replace />} />
+              <Route path="perfil" element={<UserProfile />} />
+              <Route path="dashboard" element={<AdminDashboard />} />
+              <Route path="organizacion" element={<OrgManagement />} />
+              <Route path="encuestas-aplicadas" element={<AppliedSurveys />} />
+              <Route path="riesgos" element={<PanelRiesgos />} />
+              <Route path="planes-accion" element={<PlanesAccion />} />
+              <Route path="reportes-auditoria" element={<ReportesAuditoria />} />
+              <Route path="capacitaciones" element={<Capacitaciones />} />
+              <Route path="politicas-prevencion" element={<PoliticasPrevencion />} />
 
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </BrowserRouter>
+              {/* Solo Administrador y Gerente de RH */}
+              <Route element={<ProtectedRoute acceso="gestion" />}>
+                <Route path="cuestionario" element={<CuestionarioActivo />} />
+                <Route path="alertas" element={<ConfiguracionAlertas />} />
+                <Route path="campanas-evaluacion" element={<CampanasEvaluacion />} />
+                <Route path="touchpointqr" element={<TouchpointsQR />} />
+              </Route>
+            </Route>
+          </Route>
+
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
   );
 }

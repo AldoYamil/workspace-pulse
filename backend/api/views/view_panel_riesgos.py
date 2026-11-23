@@ -15,7 +15,7 @@ from django.apps import apps
 from django.db.models import Avg, Count, Q
 from django.db.models.functions import TruncMonth
 from django.utils import timezone
-from rest_framework.permissions import IsAuthenticated
+from accounts.permissions import PersonalRH, SoloGestion, CualquierRol
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -73,7 +73,7 @@ def _empresa_del_usuario(request):
 
 
 class PanelRiesgosView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [PersonalRH]
 
     def get(self, request):
         meses = _entero(request.query_params.get("meses"), 6)
