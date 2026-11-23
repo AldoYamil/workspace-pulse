@@ -108,4 +108,12 @@ export const encuestaService = {
     const { data } = await api.post('v1/encuesta-publica/responder/', payload);
     return data;
   },
+
+  validarDominioEncuesta: async ({ token, correo }) => {
+  const { data } = await api.post('/encuesta-publica/validar-dominio/', {
+    token,
+    correo,
+  });
+  return data;
+  },
 };

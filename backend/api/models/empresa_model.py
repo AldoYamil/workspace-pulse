@@ -5,6 +5,7 @@ class Empresa(models.Model):
     id = models.AutoField(primary_key=True)
     nombre = models.CharField(max_length=100)
     rfc = models.CharField(max_length=200)
+    dominio_correo = models.CharField(max_length=120, blank=True, null=True)
     fecha_registro = models.DateTimeField(auto_now_add=True)
     activo = models.BooleanField(default=True)
 

@@ -10,6 +10,10 @@ export default function Encuesta() {
   const guiaParam = searchParams.get('guia');
   const campanaParam = searchParams.get('campana') || searchParams.get('surveyId');
   const areaParam = searchParams.get('area');
+  const [paseAnonimo, setPaseAnonimo] = useState(null);
+  const [correoVerificacion, setCorreoVerificacion] = useState('');
+  const [verificandoDominio, setVerificandoDominio] = useState(false);
+  const [errorDominio, setErrorDominio] = useState('');
 
   // Respaldo: si la URL viene solo con ?token=..., recupera la guía vinculada al crear el QR
   const savedMeta = useMemo(() => {
@@ -34,6 +38,8 @@ export default function Encuesta() {
   const [isSubmitted, setIsSubmitted] = useState(false);
 
   useEffect(() => {
+    if (!paseAnonimo) return;
+
     const cargarEncuesta = async () => {
       setLoading(true);
       setError('');
@@ -59,7 +65,32 @@ export default function Encuesta() {
     };
 
     cargarEncuesta();
-  }, [token, guiaFinal, campanaFinal, areaFinal]);
+  }, [paseAnonimo, token, guiaFinal, campanaFinal, areaFinal]);
+
+  const handleVerificarDominio = async (e) => {
+    e.preventDefault();
+    setErrorDominio('');
+    if (!token) {
+      setErrorDominio('El enlace o código QR no contiene un token válido.');
+      return;
+    }
+    setVerificandoDominio(true);
+    try {
+      const res = await encuestaService.validarDominioEncuesta({
+        token,
+        correo: correoVerificacion,
+      });
+      setCorreoVerificacion('');
+      setPaseAnonimo(res.pase_anonimo);
+    } catch (err) {
+      setErrorDominio(
+        err.response?.data?.detail ||
+          'No se pudo validar el dominio de tu correo institucional.'
+      );
+    } finally {
+      setVerificandoDominio(false);
+    }
+  };
 
   const handleAnswer = (questionId, value) => {
     setAnswers((prev) => ({ ...prev, [questionId]: value }));
@@ -73,6 +104,7 @@ export default function Encuesta() {
 
     setSubmitting(true);
     const payload = {
+      pase_anonimo: paseAnonimo,
       token: token || undefined,
       guia_id: survey.guia_id || guiaFinal,
       campana_id: survey.campana_id,
@@ -85,6 +117,7 @@ export default function Encuesta() {
 
     try {
       await encuestaService.responderEncuestaPublica(payload);
+      setPaseAnonimo(null);
       setIsSubmitted(true);
     } catch (err) {
       const errData = err.response?.data;
@@ -98,7 +131,66 @@ export default function Encuesta() {
     }
   };
 
-  // PANTALLA DE CARGA
+  // PANTALLA PREVIA: VERIFICACIÓN DE DOMINIO SIN ALMACENAR CORREO
+  if (!paseAnonimo) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center p-6">
+        <div className="bg-white rounded-3xl shadow-2xl p-8 md:p-10 max-w-md w-full border border-slate-100">
+          <div className="w-16 h-16 bg-[#1E3A5F] rounded-2xl flex items-center justify-center text-white mb-6 shadow-md">
+            <ShieldCheck size={32} />
+          </div>
+          <h1 className="text-2xl font-bold text-slate-800 mb-2">
+            Verificación de acceso NOM-035
+          </h1>
+          <p className="text-sm text-slate-600 mb-5 leading-relaxed">
+            Ingresa tu correo institucional para confirmar que perteneces a la empresa antes de responder.
+          </p>
+
+          <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 mb-6 flex gap-3 items-start">
+            <Info className="text-emerald-700 shrink-0 mt-0.5" size={18} />
+            <p className="text-xs text-emerald-900 leading-relaxed">
+              <strong>Anonimato garantizado:</strong> Tu correo solo verifica el dominio corporativo y{' '}
+              <strong>no se guarda ni se vincula</strong> con tus respuestas.
+            </p>
+          </div>
+
+          <form onSubmit={handleVerificarDominio} className="space-y-4">
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                Correo institucional
+              </label>
+              <input
+                type="email"
+                required
+                value={correoVerificacion}
+                onChange={(e) => setCorreoVerificacion(e.target.value)}
+                placeholder="colaborador@tuempresa.com"
+                className="w-full px-4 py-3 rounded-xl border border-slate-300 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]"
+              />
+            </div>
+
+            {errorDominio && (
+              <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700 flex items-start gap-2">
+                <AlertCircle size={16} className="shrink-0 mt-0.5" />
+                <span>{errorDominio}</span>
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={verificandoDominio}
+              className="w-full py-3.5 bg-[#1E3A5F] text-white rounded-xl font-bold text-sm hover:bg-[#162c4a] transition-all shadow-lg disabled:opacity-60 flex items-center justify-center gap-2"
+            >
+              {verificandoDominio && <Loader2 size={18} className="animate-spin" />}
+              {verificandoDominio ? 'Validando dominio...' : 'Continuar de forma anónima'}
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  //PANTALLA LOADING...
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex flex-col items-center justify-center p-6 text-slate-600">

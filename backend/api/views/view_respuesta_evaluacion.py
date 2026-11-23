@@ -8,6 +8,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from datetime import date, timedelta
+from django.core import signing
 from django.utils import timezone
 import random
 from urllib.parse import urlparse, parse_qs
@@ -17,6 +18,7 @@ from api.models.respuesta_evaluacion_model import Respuesta_evaluacion
 from api.models.campana_evaluacion_model import Campana_evaluacion
 from api.models.area_model import Area
 from api.services.alertas_service import evaluar_umbrales
+from api.models.touchpoint_model import Touchpoint
 
 
 def _m(nombre):
@@ -27,7 +29,6 @@ def _m(nombre):
 class CreateRespuestaEvaluacionApiView(generics.CreateAPIView):
     queryset = Respuesta_evaluacion.objects.all()
     serializer_class = respuesta_evaluacion_serializer.CreateRespuestaEvaluacionSerializer
-
 
 ## READ
 class ListRespuestaEvaluacionApiView(APIView):
@@ -231,6 +232,31 @@ class ResponderEncuestaPublicaView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
+        pase_anonimo = request.data.get("pase_anonimo")
+        if not pase_anonimo:
+            return Response(
+                {"detail": "Debes verificar tu correo institucional antes de enviar la encuesta."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        try:
+            datos_pase = signing.loads(pase_anonimo, salt="encuesta-nom035-anonima", max_age=7200)
+            if not datos_pase.get("anonimo"):
+                raise signing.BadSignature("Pase inválido")
+        except signing.SignatureExpired:
+            return Response(
+                {"detail": "Tu sesión de encuesta expiró. Vuelve a verificar tu correo."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        except signing.BadSignature:
+            return Response(
+                {"detail": "Token de verificación inválido."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        token = request.data.get("token")
+
+    def post(self, request):
         token = request.data.get("token")
         guia_id = request.data.get("guia_id")
         campana_id = request.data.get("campana_id")
@@ -345,6 +371,58 @@ class ResponderEncuestaPublicaView(APIView):
                 {"detail": f"Error al guardar en BD: {exc}"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+class ValidarDominioEncuestaView(APIView):
+    authentication_classes = []
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        token_qr = (request.data.get("token") or "").strip()
+        correo = (request.data.get("correo") or "").strip().lower()
+
+        if not token_qr or "@" not in correo:
+            return Response(
+                {"detail": "Debes ingresar un correo electrónico válido."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        touchpoint = (
+            Touchpoint.objects.select_related("centro_trabajo__empresa")
+            .filter(codigo_qr_token=token_qr) 
+            .first()
+        )
+        if not touchpoint or not touchpoint.centro_trabajo:
+            return Response(
+                {"detail": "El enlace o código QR de la encuesta no es válido."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        empresa = touchpoint.centro_trabajo.empresa
+        dominio_usuario = correo.split("@")[-1]
+
+        dominio_empresa = getattr(empresa, "dominio_correo", None) or getattr(empresa, "dominio", None)
+
+        if not dominio_empresa and getattr(empresa, "email", None) and "@" in empresa.email:
+            dominio_empresa = empresa.email.split("@")[-1].lower()
+
+        if not dominio_empresa or dominio_usuario != dominio_empresa.strip().lower().lstrip("@"):
+            return Response(
+                {"detail": f"Acceso denegado. Usa tu correo institucional (@{dominio_empresa or 'empresa.com'})."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        
+        pase_anonimo = signing.dumps(
+            {"empresa_id": empresa.id, "touchpoint_token": token_qr, "anonimo": True},
+            salt="encuesta-nom035-anonima",
+        )
+
+        return Response(
+            {
+                "validado": True,
+                "pase_anonimo": pase_anonimo,
+                "mensaje": "Dominio verificado. Tus respuestas serán 100% anónimas.",
+            },
+            status=status.HTTP_200_OK,
+        )
 
 class SimularEncuestasMasivasView(APIView):
     authentication_classes = []

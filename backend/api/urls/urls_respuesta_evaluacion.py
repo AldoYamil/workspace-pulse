@@ -9,4 +9,5 @@ urlpatterns = [
     path("v1/encuesta-publica/", view_respuesta_evaluacion.EncuestaPublicaDetalleView.as_view(), name="encuesta-publica-detalle"),
     path("v1/encuesta-publica/responder/", view_respuesta_evaluacion.ResponderEncuestaPublicaView.as_view(), name="encuesta-publica-responder"),
     path('v1/encuesta-publica/simular/', view_respuesta_evaluacion.SimularEncuestasMasivasView.as_view(), name='simular-encuestas'),
+    path("encuesta-publica/validar-dominio/", view_respuesta_evaluacion.ValidarDominioEncuestaView.as_view(), name="validar-dominio-encuesta"),
 ]

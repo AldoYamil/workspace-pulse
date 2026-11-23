@@ -6,12 +6,82 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-// IMPORTANTE: Asegúrate de guardar tu captura de pantalla en src/assets/ con este nombre
-// o cambia la ruta en la variable 'dashboardImage'
 import dashboardScreenshot from '../assets/DashboardPhoto.png'; 
 
 const LandingPage = () => {
-  const [showRegisterModal, setShowRegisterModal] = useState(false);
+const [showRegisterModal, setShowRegisterModal] = useState(false);
+const [regForm, setRegForm] = useState({
+  nombre_empresa: '',
+  rfc: '',
+  dominio_correo: '',
+  nombre_admin: '',
+  email_admin: '',
+  password_admin: '',
+});
+const [regLoading, setRegLoading] = useState(false);
+const [regError, setRegError] = useState('');
+const [regSuccess, setRegSuccess] = useState('');
+
+const handleRegisterEmpresa = async (e) => {
+  e.preventDefault();
+  setRegError('');
+  setRegSuccess('');
+
+  const dominioLimpio = regForm.dominio_correo.trim().toLowerCase().replace(/^@/, '');
+  const emailLimpio = regForm.email_admin.trim().toLowerCase();
+
+  if (!emailLimpio.endsWith(`@${dominioLimpio}`)) {
+    setRegError(`El correo del administrador debe terminar en @${dominioLimpio}`);
+    return;
+  }
+
+  setRegLoading(true);
+  try {
+    const { data: authData, error: authError } = await supabase.auth.signUp({
+      email: emailLimpio,
+      password: regForm.password_admin,
+      options: {
+        data: {
+          nombre: regForm.nombre_admin.trim(),
+          rol: 'admin',
+        },
+      },
+    });
+
+    if (authError) {
+      throw new Error(authError.message);
+    }
+
+    await axios.post('http://127.0.0.1:8000/api/v1/empresas/create/', {
+      nombre: regForm.nombre_empresa.trim(),
+      rfc: regForm.rfc.trim().toUpperCase(),
+      dominio_correo: dominioLimpio,
+      nombre_admin: regForm.nombre_admin.trim(),
+      email_admin: emailLimpio,
+      supabase_uid: authData?.user?.id || '',
+    });
+
+    setRegSuccess(
+      '¡Empresa y cuenta de administrador creadas! Ya puedes iniciar sesión.'
+    );
+    setRegForm({
+      nombre_empresa: '',
+      rfc: '',
+      dominio_correo: '',
+      nombre_admin: '',
+      email_admin: '',
+      password_admin: '',
+    });
+  } catch (err) {
+    setRegError(
+      err.response?.data?.detail ||
+        err.message ||
+        'Ocurrió un error al crear la cuenta empresarial.'
+    );
+  } finally {
+    setRegLoading(false);
+  }
+};
 
   const fadeInUp = {
     hidden: { opacity: 0, y: 40 },
@@ -47,29 +117,169 @@ const LandingPage = () => {
       {/* Modal de Registro */}
       <AnimatePresence>
         {showRegisterModal && (
-          <motion.div 
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto"
             onClick={() => setShowRegisterModal(false)}
           >
-            <motion.div 
-              initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-2xl p-8 w-full max-w-md shadow-2xl relative"
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white rounded-2xl p-8 w-full max-w-lg shadow-2xl relative my-8"
               onClick={(e) => e.stopPropagation()}
             >
-              <button onClick={() => setShowRegisterModal(false)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"><X size={24} /></button>
-              <h3 className="text-2xl font-bold text-slate-900 mb-2">Registro Empresarial</h3>
-              <p className="text-gray-500 mb-6 text-sm">Comienza a medir el pulso de tu organización cumpliendo con la NOM-035.</p>
-              <form className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Nombre de la Empresa</label>
-                  <input type="text" placeholder="Ej. Corporativo Selegna S.A. de C.V." className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#1E3A5F] outline-none text-slate-900" />
+              <button
+                type="button"
+                onClick={() => setShowRegisterModal(false)}
+                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+              >
+                <X size={24} />
+              </button>
+
+              <h3 className="text-2xl font-bold text-slate-900 mb-1">Registro Empresarial</h3>
+              <p className="text-gray-500 mb-5 text-sm">
+                Configura tu empresa, su dominio institucional y tu cuenta de Administrador.
+              </p>
+
+              <form onSubmit={handleRegisterEmpresa} className="space-y-3.5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Nombre de la Empresa
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={regForm.nombre_empresa}
+                      onChange={(e) =>
+                        setRegForm({ ...regForm, nombre_empresa: e.target.value })
+                      }
+                      placeholder="Ej. Corporativo Selegna"
+                      className="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#1E3A5F] outline-none text-sm text-slate-900"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      RFC
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      maxLength={13}
+                      value={regForm.rfc}
+                      onChange={(e) =>
+                        setRegForm({ ...regForm, rfc: e.target.value.toUpperCase() })
+                      }
+                      placeholder="Ej. CSF261022ABC"
+                      className="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#1E3A5F] outline-none text-sm text-slate-900 uppercase"
+                    />
+                  </div>
                 </div>
+
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">RFC</label>
-                  <input type="text" placeholder="Ej. CSF261022ABC" maxLength={13} className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#1E3A5F] outline-none text-slate-900 uppercase" />
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Dominio de Correo Empresarial
+                  </label>
+                  <div className="flex items-center rounded-lg border border-gray-300 focus-within:ring-2 focus-within:ring-[#1E3A5F] overflow-hidden">
+                    <span className="px-3 py-2.5 bg-slate-100 text-slate-500 text-sm font-semibold border-r border-gray-300">
+                      @
+                    </span>
+                    <input
+                      type="text"
+                      required
+                      value={regForm.dominio_correo}
+                      onChange={(e) =>
+                        setRegForm({ ...regForm, dominio_correo: e.target.value })
+                      }
+                      placeholder="tuempresa.com"
+                      className="w-full px-3.5 py-2.5 outline-none text-sm text-slate-900"
+                    />
+                  </div>
+                  <p className="text-[11px] text-slate-400 mt-1">
+                    Solo los colaboradores con este dominio podrán acceder a las encuestas NOM-035.
+                  </p>
                 </div>
-                <button type="submit" className="w-full bg-[#1E3A5F] hover:bg-blue-900 text-white font-bold py-3 rounded-lg transition-colors mt-2">Crear Cuenta Empresarial</button>
+
+                <hr className="border-slate-200 my-2" />
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Nombre del Administrador
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={regForm.nombre_admin}
+                    onChange={(e) =>
+                      setRegForm({ ...regForm, nombre_admin: e.target.value })
+                    }
+                    placeholder="Ej. Ana García"
+                    className="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#1E3A5F] outline-none text-sm text-slate-900"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Correo del Administrador
+                    </label>
+                    <input
+                      type="email"
+                      required
+                      value={regForm.email_admin}
+                      onChange={(e) =>
+                        setRegForm({ ...regForm, email_admin: e.target.value })
+                      }
+                      placeholder={
+                        regForm.dominio_correo
+                          ? `admin@${regForm.dominio_correo.replace(/^@/, '')}`
+                          : 'admin@tuempresa.com'
+                      }
+                      className="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#1E3A5F] outline-none text-sm text-slate-900"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Contraseña
+                    </label>
+                    <input
+                      type="password"
+                      required
+                      minLength={6}
+                      value={regForm.password_admin}
+                      onChange={(e) =>
+                        setRegForm({ ...regForm, password_admin: e.target.value })
+                      }
+                      placeholder="Mínimo 6 caracteres"
+                      className="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#1E3A5F] outline-none text-sm text-slate-900"
+                    />
+                  </div>
+                </div>
+
+                {regError && (
+                  <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-xs text-red-700">
+                    {regError}
+                  </div>
+                )}
+
+                {regSuccess && (
+                  <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 font-medium">
+                    {regSuccess}
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={regLoading}
+                  className="w-full bg-[#1E3A5F] hover:bg-blue-900 disabled:opacity-60 text-white font-bold py-3 rounded-lg transition-colors mt-2"
+                >
+                  {regLoading ? 'Creando cuenta empresarial...' : 'Crear Cuenta Empresarial'}
+                </button>
               </form>
             </motion.div>
           </motion.div>
