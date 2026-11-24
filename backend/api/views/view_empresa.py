@@ -80,7 +80,9 @@ class CreateEmpresaApiView(generics.CreateAPIView):
                     campos_centro = {f.name for f in CentroTrabajo._meta.fields}
                     if "direccion" in campos_centro:
                         centro_kwargs["direccion"] = "Oficina Central"
-                    if "total_empleados" in campos_centro:
+                    if "num_empleados" in campos_centro:
+                        centro_kwargs["num_empleados"] = 1
+                    elif "total_empleados" in campos_centro:
                         centro_kwargs["total_empleados"] = 1
 
                     centro = CentroTrabajo.objects.create(**centro_kwargs)
@@ -90,6 +92,8 @@ class CreateEmpresaApiView(generics.CreateAPIView):
                         "email": email_admin,
                         "centro_trabajo": centro,
                     }
+                    if "empresa" in campos_usuario:
+                        usuario_kwargs["empresa"] = empresa
                     if "nombre" in campos_usuario:
                         usuario_kwargs["nombre"] = nombre_admin or "Administrador"
                     if "rol" in campos_usuario:

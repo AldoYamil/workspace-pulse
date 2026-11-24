@@ -6,6 +6,8 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
+import axios from 'axios';
+import { supabase } from '../lib/supabaseClient';
 import dashboardScreenshot from '../assets/DashboardPhoto.png'; 
 
 const LandingPage = () => {
@@ -52,7 +54,7 @@ const handleRegisterEmpresa = async (e) => {
       throw new Error(authError.message);
     }
 
-    await axios.post('http://127.0.0.1:8000/api/v1/empresas/create/', {
+    await axios.post('http://127.0.0.1:8000/api/v1/empresa/create/', {
       nombre: regForm.nombre_empresa.trim(),
       rfc: regForm.rfc.trim().toUpperCase(),
       dominio_correo: dominioLimpio,
@@ -73,11 +75,23 @@ const handleRegisterEmpresa = async (e) => {
       password_admin: '',
     });
   } catch (err) {
-    setRegError(
-      err.response?.data?.detail ||
-        err.message ||
-        'Ocurrió un error al crear la cuenta empresarial.'
-    );
+    const data = err.response?.data;
+    let mensajeError = err.message || 'Ocurrió un error al crear la cuenta empresarial.';
+
+    if (data) {
+      if (data.detail) {
+        mensajeError = data.detail;
+      } else if (typeof data === 'object') {
+        // Extrae el primer error de validación (ej. rfc, nombre, etc.)
+        const primerCampo = Object.keys(data)[0];
+        const primerMensaje = Array.isArray(data[primerCampo])
+          ? data[primerCampo][0]
+          : data[primerCampo];
+        mensajeError = `${primerCampo.toUpperCase()}: ${primerMensaje}`;
+      }
+    }
+
+    setRegError(mensajeError);
   } finally {
     setRegLoading(false);
   }

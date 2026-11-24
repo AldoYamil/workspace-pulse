@@ -27,8 +27,7 @@ class CreateEmpresaSerializer(serializers.ModelSerializer):
             "id",
             "nombre",
             "rfc",
-            "fecha_registro",
-            "activo"
+            "dominio_correo",
         ]
         read_only_fields = ("id", "fecha_registro")
 
