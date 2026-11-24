@@ -244,6 +244,10 @@ export default function AdminDashboard() {
             type="button"
             onClick={() => navigate('/panel-riesgos')}
             className="bg-[#1E3A5F] p-4 rounded-xl shadow-lg hover:bg-[#172A47] transition-all flex items-center gap-3 text-white border border-white/10 text-left"
+            ></button>
+          <button
+            onClick={() => navigate('/admin/planes-accion')} 
+            className="bg-[#1E3A5F] p-4 rounded-xl shadow-lg hover:bg-[#172A47] transition-all flex items-center gap-3 text-white border border-white/10 cursor-pointer"
           >
             <div className="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center">
               <TrendingUp size={20} />
