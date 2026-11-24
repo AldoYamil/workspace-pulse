@@ -2,7 +2,7 @@ from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import generics, status
-from rest_framework.permissions import IsAuthenticated
+from accounts.permissions import PersonalRH, SoloGestion, CualquierRol
 
 from django.contrib.auth.models import User
 
@@ -20,7 +20,7 @@ def get_usuario_perfil(user_auth):
 
 ##CREATE
 class CreatePuestoApiView(generics.CreateAPIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [PersonalRH]
     queryset = Puesto.objects.all()
     serializer_class = puesto_serializer.CreatePuestoSerializer
 
@@ -28,7 +28,7 @@ class CreatePuestoApiView(generics.CreateAPIView):
 
 ##List
 class ListPuestoApiView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [PersonalRH]
     def get(self, request):
         usuario_logueado = request.user
         usuario_perfil = getattr(usuario_logueado, 'usuario', None)
@@ -59,7 +59,7 @@ class ListPuestoApiView(APIView):
 
 ##Detail
 class DetailPuestoApiView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [PersonalRH]
     def get(self, request, id):
         usuario_logueado = request.user
         usuario_perfil = getattr(usuario_logueado, 'usuario', None)
@@ -83,7 +83,7 @@ class DetailPuestoApiView(APIView):
 
 ##UPDATE
 class UpdatePuestoApiView(generics.UpdateAPIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [PersonalRH]
     queryset = Puesto.objects.all()
     serializer_class = puesto_serializer.UpdatePuestoSerializer
     def get_queryset(self):
@@ -96,7 +96,7 @@ class UpdatePuestoApiView(generics.UpdateAPIView):
 
 ##DELETE
 class DeletePuestoApiView(generics.DestroyAPIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [PersonalRH]
     queryset = Puesto.objects.all()
     serializer_class = puesto_serializer.DeletePuestoSerializer
     def get_queryset(self):

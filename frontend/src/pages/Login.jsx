@@ -35,15 +35,23 @@ export default function Login() {
       if (!data.session) {
         throw new Error('No se pudo obtener una sesión de usuario.');
       }
-      const respuesta = await api.get('v1/empresa/list/');
-      console.log('Respuesta de Django:', respuesta.data);
 
-      navigate('/admin/dashboard');
-      // Redirigir al Dashboard Administrativo
-      navigate('/admin/dashboard');
+      // Pregunta al backend quién es el usuario y qué rol tiene.
+      // /me/ lo pueden consultar todos los roles.
+      const respuesta = await api.get('me/');
+      const rol = respuesta.data.rol;
+
+      // El rol "usuario" solo contesta encuestas; el resto entra al panel.
+      navigate(rol === 'usuario' ? '/encuesta' : '/admin/dashboard', { replace: true });
     } catch (err) {
       console.error('Error de autenticación:', err.response?.status);
       console.error('Respuesta de Django:', err.response?.data);
+
+      // Evita dejar una sesión de Supabase abierta si el backend rechazó al usuario
+      if (supabase) {
+        await supabase.auth.signOut().catch(() => {});
+      }
+
       setError(
         err.response?.data?.detail ||
         err.message ||

@@ -1,47 +1,13 @@
-
-import { useEffect, useState } from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
-import { supabase } from '../lib/supabaseClient';
+import { useRol } from '../context/AuthContext';
 
-export default function ProtectedRoute() {
-  const [session, setSession] = useState(null);
-  const [loading, setLoading] = useState(true);
+// Uso:
+//   <ProtectedRoute acceso="rh" />       -> Administrador, Gerente y Asistente
+//   <ProtectedRoute acceso="gestion" />  -> solo Administrador y Gerente
+export default function ProtectedRoute({ acceso = 'rh' }) {
+  const { session, rol, cargando, puedeAcceder } = useRol();
 
-  useEffect(() => {
-    if (!supabase) {
-      setLoading(false);
-      return;
-    }
-
-    let mounted = true;
-
-    const checkSession = async () => {
-      const { data, error } = await supabase.auth.getSession();
-
-      if (!mounted) return;
-
-      setSession(error ? null : data.session);
-      setLoading(false);
-    };
-
-    checkSession();
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, newSession) => {
-      if (mounted) {
-        setSession(newSession);
-        setLoading(false);
-      }
-    });
-
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
-  }, []);
-
-  if (loading) {
+  if (cargando) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         Verificando sesión...
@@ -49,8 +15,20 @@ export default function ProtectedRoute() {
     );
   }
 
+  // Sin sesión de Supabase
   if (!session) {
     return <Navigate to="/login" replace />;
+  }
+
+  // Con sesión, pero el backend no devolvió un rol
+  if (!rol) {
+    return <Navigate to="/unauthorized" replace />;
+  }
+
+  // Con rol, pero sin permiso para esta sección
+  if (!puedeAcceder(acceso)) {
+    // El rol "usuario" solo contesta encuestas
+    return <Navigate to={rol === 'usuario' ? '/encuesta' : '/unauthorized'} replace />;
   }
 
   return <Outlet />;

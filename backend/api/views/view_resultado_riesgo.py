@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import generics, status
-from rest_framework.permissions import IsAuthenticated
+from accounts.permissions import PersonalRH, SoloGestion, CualquierRol
 
 from django.contrib.auth.models import User
 
@@ -12,7 +12,7 @@ from api.models.area_model import Area
 
 ##CREATE
 class CreateResultadoRiesgoApiView(generics.CreateAPIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [PersonalRH]
     queryset = ResultadoRiesgo.objects.all()
     serializer_class = resultado_riesgo_serializer.CreateResultadoRiesgoSerializer
 
@@ -20,7 +20,7 @@ class CreateResultadoRiesgoApiView(generics.CreateAPIView):
 
 ##By Campaña
 class ListResultadoRiesgoByCampanaApiView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [PersonalRH]
     def get(self, request, campana_id):
         usuario_logueado = request.user
         empresa_id = usuario_logueado.centrotrabajo.empresa_id
@@ -33,7 +33,7 @@ class ListResultadoRiesgoByCampanaApiView(APIView):
 
 ##By Area en Campaña
 class ListResultadoRiesgoByAreaCampanaApiView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [PersonalRH]
     def get(self, request, campana_id, area_id):
         usuario_logueado = request.user
         empresa_id = usuario_logueado.centrotrabajo.empresa_id

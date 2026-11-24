@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import generics, status
-from rest_framework.permissions import IsAuthenticated
+from accounts.permissions import PersonalRH, SoloGestion, CualquierRol
 
 from django.contrib.auth.models import User
 
@@ -12,14 +12,14 @@ from api.models.usuario_model import Usuario
 
 ##CREATE
 class CreatePlaneacionApiView(generics.CreateAPIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [PersonalRH]
     queryset = Planeacion.objects.all()
     serializer_class = planeacion_serializer.CreatePlaneacionSerializer
 
 ##READ
 #List
 class ListPlaneacionApiView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [PersonalRH]
     def get(self, request):
         usuario_logeado = request.user
         empresa_id = usuario_logeado.centrotrabajo.empresa_id
@@ -41,7 +41,7 @@ class ListPlaneacionApiView(APIView):
 
 #Detail
 class DetailPlaneacionApiView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [PersonalRH]
     def get(self, request, id):
         usuario_logeado = request.user
         empresa_id = usuario_logeado.centrotrabajo.empresa_id
@@ -53,13 +53,13 @@ class DetailPlaneacionApiView(APIView):
 
 ##UPDATE
 class UpdatePlaneacionApiView(generics.UpdateAPIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [PersonalRH]
     queryset = Planeacion.objects.all()
     serializer_class = planeacion_serializer.UpdatePlaneacionSerializer
 
 ##DELETE
 class DeletePlaneacionApiView(generics.DestroyAPIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [PersonalRH]
     queryset = Planeacion.objects.all()
     serializer_class = planeacion_serializer.DeletePlaneacionSerializer
 from rest_framework import status

@@ -2,6 +2,7 @@ from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import generics, status
+from accounts.permissions import PersonalRH, CualquierRol
 
 from django.contrib.auth.models import User
 
@@ -12,6 +13,7 @@ from api.models.pregunta_model import Pregunta
 
 ##CREATE
 class CreateDetalleRespuestaApiView(generics.CreateAPIView):
+    permission_classes = [CualquierRol]
     queryset = DetalleRespuesta.objects.all()
     serializer_class = detalle_respuesta_serializer.CreateDetalleRespuestaSerializer
 
@@ -19,6 +21,8 @@ class CreateDetalleRespuestaApiView(generics.CreateAPIView):
 
 ##List
 class ListDetalleRespuestaApiView(APIView):
+    permission_classes = [PersonalRH]
+
     def get(self, request):
         respuesta_id = request.query_params.get('respuesta_id')
         
@@ -34,6 +38,8 @@ class ListDetalleRespuestaApiView(APIView):
     
 ##Detail
 class DetailDetalleRespuestaApiView(APIView):
+    permission_classes = [PersonalRH]
+
     def get(self, request, id):
         respuesta_id = request.query_params.get('respuesta_id')
         

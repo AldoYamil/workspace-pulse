@@ -2,7 +2,7 @@ from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import generics, status
-from rest_framework.permissions import IsAuthenticated
+from accounts.permissions import PersonalRH, SoloGestion, CualquierRol
 
 from django.contrib.auth.models import User
 
@@ -20,7 +20,7 @@ def get_usuario_perfil(user_auth):
 
 ##CREATE
 class CreateCentroTrabajoApiView(generics.CreateAPIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [PersonalRH]
     queryset = Centro_trabajo.objects.all()
     serializer_class = centro_trabajo_serializer.CreateCentroTrabajoSerializer
 
@@ -28,7 +28,7 @@ class CreateCentroTrabajoApiView(generics.CreateAPIView):
 
 ##List
 class ListCentroTrabajoApiView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [PersonalRH]
     def get(self, request):
         usuario_logueado = request.user
         usuario_perfil = getattr(usuario_logueado, 'usuario', None)
@@ -53,7 +53,7 @@ class ListCentroTrabajoApiView(APIView):
 
 ##Detail
 class DetailCentroTrabajoApiView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [PersonalRH]
     def get(self, request, id):
         usuario_logueado = request.user
         usuario_perfil = getattr(usuario_logueado, 'usuario', None)
@@ -82,7 +82,7 @@ class DetailCentroTrabajoApiView(APIView):
 
 ##UPDATE
 class UpdateCentroTrabajoApiView(generics.UpdateAPIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [PersonalRH]
     serializer_class = centro_trabajo_serializer.UpdateCentroTrabajoSerializer
 
     def get_queryset(self):
@@ -95,7 +95,7 @@ class UpdateCentroTrabajoApiView(generics.UpdateAPIView):
 
 ##DELETE
 class DeleteCentroTrabajoApiView(generics.DestroyAPIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [PersonalRH]
     serializer_class = centro_trabajo_serializer.DeleteCentroTrabajoSerializer
 
     def get_queryset(self):

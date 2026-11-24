@@ -1,8 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import generics, status
-from rest_framework.permissions import IsAuthenticated
-from api.permissions import EsAdminOGerenteRH
+from accounts.permissions import SoloGestion
 
 from django.contrib.auth.models import User
 
@@ -15,7 +14,7 @@ from api.models.usuario_model import Usuario
 
 ##CREATE
 class CreateTouchpointApiView(generics.CreateAPIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [SoloGestion]
     queryset = Touchpoint.objects.all()
     serializer_class = touchpoint_serializer.CreateTouchpointSerializer
 
@@ -23,7 +22,7 @@ class CreateTouchpointApiView(generics.CreateAPIView):
 
 #List
 class ListTouchpointApiView(APIView):
-    permission_classes = [EsAdminOGerenteRH]
+    permission_classes = [SoloGestion]
     def get(self, request):
         usuario_logueado = request.user
         perfil = Usuario.objects.select_related('centro_trabajo').filter(email=request.user.email).first()
@@ -52,7 +51,7 @@ class ListTouchpointApiView(APIView):
 
 #Detail
 class DetailTouchpointApiView(APIView):
-    permission_classes = [EsAdminOGerenteRH]
+    permission_classes = [SoloGestion]
     def get(self, request, touchpoint_id):
         usuario_logueado = request.user
         empresa_id = usuario_logueado.centrotrabajo.empresa_id
@@ -66,12 +65,12 @@ class DetailTouchpointApiView(APIView):
 
 ##UPDATE
 class UpdateTouchpointApiView(generics.UpdateAPIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [SoloGestion]
     queryset = Touchpoint.objects.all()
     serializer_class = touchpoint_serializer.UpdateTouchpointSerializer
 
 ##DELETE
 class DeleteTouchpointApiView(generics.DestroyAPIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [SoloGestion]
     queryset = Touchpoint.objects.all()
     serializer_class = touchpoint_serializer.DeleteTouchpointSerializer

@@ -1,6 +1,6 @@
 from django.apps import apps
 from rest_framework import serializers, status
-from rest_framework.permissions import IsAuthenticated
+from accounts.permissions import PersonalRH, SoloGestion, CualquierRol
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -93,7 +93,7 @@ class RecomendacionesSerializer(serializers.Serializer):
 # ----------------------------------------------------------------------
 
 class PlanesAccionView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [PersonalRH]
 
     def get(self, request):
         empresa_id = empresa_del_usuario(request)
@@ -161,7 +161,7 @@ class PlanesAccionView(APIView):
 
 
 class PlanAccionDetalleView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [PersonalRH]
 
     def patch(self, request, pk):
         empresa_id = empresa_del_usuario(request)
@@ -199,7 +199,7 @@ class RecomendacionesView(APIView):
     Devuelve recomendaciones generadas por IA (Groq) o, si no está disponible,
     del catálogo. Siempre indica el 'origen' para mostrarlo en pantalla.
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [PersonalRH]
 
     def post(self, request):
         empresa_id = empresa_del_usuario(request)
@@ -224,7 +224,7 @@ class RecomendacionesView(APIView):
 
 class AreasView(APIView):
     """Áreas de la empresa del usuario, para el selector de recomendaciones."""
-    permission_classes = [IsAuthenticated]
+    permission_classes = [PersonalRH]
 
     def get(self, request):
         empresa_id = empresa_del_usuario(request)

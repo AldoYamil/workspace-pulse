@@ -3,7 +3,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import generics, status
 from rest_framework.exceptions import PermissionDenied
-from rest_framework.permissions import IsAuthenticated
+from accounts.permissions import SoloGestion          
 
 from django.contrib.auth.models import User
 
@@ -19,7 +19,7 @@ def obtener_empresa_id(user):
     return perfil.centro_trabajo.empresa_id
 
 class EvaluarUmbralesApiView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [SoloGestion]                
 
     def post(self, request):
         empresa_id = obtener_empresa_id(request.user)
@@ -36,7 +36,7 @@ class EvaluarUmbralesApiView(APIView):
 
 ##CREATE
 class CreateAlertaClimaApiView(generics.CreateAPIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [SoloGestion]                # <-- CAMBIO
     queryset = AlertaClima.objects.all()
     serializer_class = alerta_clima_serializer.CreateAlertaClimaSerializer
 
@@ -44,7 +44,7 @@ class CreateAlertaClimaApiView(generics.CreateAPIView):
 
 #List
 class ListAlertaClimaApiView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [SoloGestion]                # <-- CAMBIO
     serializer_class = alerta_clima_serializer.ListAlertaClimaSerializer
 
     def get_queryset(self):
@@ -55,7 +55,7 @@ class ListAlertaClimaApiView(APIView):
 
 #Detail
 class DetailAlertaClimaApiView(generics.RetrieveAPIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [SoloGestion]                # <-- CAMBIO
     serializer_class = alerta_clima_serializer.ListAlertaClimaSerializer
     lookup_field = 'pk'
 
@@ -67,7 +67,7 @@ class DetailAlertaClimaApiView(generics.RetrieveAPIView):
 
 #Alertas No Resueltas
 class ListAlertaClimaNoResueltasApiView(generics.ListAPIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [SoloGestion]                # <-- CAMBIO
     serializer_class = alerta_clima_serializer.ListAlertaClimaSerializer
 
     def get_queryset(self):
@@ -79,7 +79,7 @@ class ListAlertaClimaNoResueltasApiView(generics.ListAPIView):
 
 ##UPDATE
 class UpdateAlertaClimaApiView(generics.UpdateAPIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [SoloGestion]                # <-- CAMBIO
     serializer_class = alerta_clima_serializer.UpdateAlertaClimaSerializer
     lookup_field = 'pk'
 
@@ -91,7 +91,7 @@ class UpdateAlertaClimaApiView(generics.UpdateAPIView):
 
 ## DELETE
 class DeleteAlertaClimaApiView(generics.DestroyAPIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [SoloGestion]                # <-- CAMBIO
     lookup_field = 'pk'
 
     def get_queryset(self):

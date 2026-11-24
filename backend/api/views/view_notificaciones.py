@@ -6,7 +6,7 @@
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 from rest_framework import status
-from rest_framework.permissions import IsAuthenticated
+from accounts.permissions import PersonalRH, SoloGestion, CualquierRol
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -44,7 +44,7 @@ class EvaluarAlertasView(APIView):
       enviar_correos   -> false para crear alertas sin mandar correo (default true)
       forzar           -> true para ignorar la regla de "una alerta abierta por umbral"
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [SoloGestion]
 
     def post(self, request):
         empresa_id = _empresa_del_usuario(request)
@@ -68,7 +68,7 @@ class PruebaCorreoView(APIView):
     Manda un correo de prueba a TU correo (el de la sesión).
     Solo un superusuario puede indicar otro 'destinatario' en el body.
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [SoloGestion]
 
     def post(self, request):
         destinatario = (getattr(request.user, "email", "") or "").strip()

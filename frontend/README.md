@@ -21,3 +21,8 @@ librerias intaladas:
 - npm install react-router-dom lucide-react
 - npm install recharts
 - npm install html2canvas-pro
+
+
+
+diegoxd123
+diegoxd123

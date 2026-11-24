@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import generics, status
-from rest_framework.permissions import IsAuthenticated
+from accounts.permissions import PersonalRH, SoloGestion, CualquierRol
 
 from django.contrib.auth.models import User
 
@@ -12,14 +12,14 @@ from api.models.area_model import Area
 
 ##CREATE
 class CreateMetricaRHApiView(generics.CreateAPIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [PersonalRH]
     queryset = MetricaRendimientoRH.objects.all()
     serializer_class = metrica_rendimiento_rh_serializer.CreateMetricaRHSerializer
 
 ##READ
 #List
 class ListMetricaRHApiView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [PersonalRH]
     def get(self, request):
         usuario_logeado = request.user
         empresa_id = usuario_logeado.centrotrabajo.empresa_id
