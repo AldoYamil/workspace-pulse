@@ -57,9 +57,6 @@ def _usuario_de_empresa(usuario_id, empresa_id):
     return qs.first()
 
 
-# ----------------------------------------------------------------------
-# Serializers de entrada (solo validan lo que manda el frontend)
-# ----------------------------------------------------------------------
 
 class CrearPlanSerializer(serializers.Serializer):
     titulo = serializers.CharField(max_length=100)
@@ -88,9 +85,6 @@ class RecomendacionesSerializer(serializers.Serializer):
     meses = serializers.ChoiceField(choices=(1, 3, 6, 12), required=False, default=6)
 
 
-# ----------------------------------------------------------------------
-# Vistas
-# ----------------------------------------------------------------------
 
 class PlanesAccionView(APIView):
     permission_classes = [PersonalRH]
@@ -123,7 +117,6 @@ class PlanesAccionView(APIView):
         datos.is_valid(raise_exception=True)
         d = datos.validated_data
 
-        # Resultado de riesgo al que responde el plan
         riesgos = _m("ResultadoRiesgo").objects.all()
         if empresa_id is not None:
             riesgos = riesgos.filter(area__centro_trabajo__empresa_id=empresa_id)
@@ -137,7 +130,6 @@ class PlanesAccionView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # Responsable: el indicado o, si no se manda, quien crea el plan
         if "usuario" in d:
             responsable = _usuario_de_empresa(d["usuario"], empresa_id)
         else:

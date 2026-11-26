@@ -38,7 +38,11 @@ export default function Login() {
 
       // Pregunta al backend quién es el usuario y qué rol tiene.
       // /me/ lo pueden consultar todos los roles.
-      const respuesta = await api.get('me/');
+      const respuesta = await api.get('me/', {
+          headers: {
+            Authorization: `Bearer ${data.session.access_token}`,
+          },
+        });
       const rol = respuesta.data.rol;
 
       // El rol "usuario" solo contesta encuestas; el resto entra al panel.

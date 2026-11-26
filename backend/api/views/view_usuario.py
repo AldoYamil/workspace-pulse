@@ -18,11 +18,33 @@ class CreateUsuarioApiView(generics.CreateAPIView):
 ##READ
 
 ##List
+##List
 class ListUsuarioApiView(APIView):
+    def get_empresa_id_usuario(self, request):
+        campos = {f.name for f in Usuario._meta.fields}
+        perfil = None
+        if "supabase_uid" in campos:
+            perfil = Usuario.objects.filter(supabase_uid=request.user.username).first()
+        if not perfil and getattr(request.user, "email", None):
+            perfil = Usuario.objects.filter(email__iexact=request.user.email).first()
+
+        if not perfil:
+            return None
+
+        return getattr(perfil, "empresa_id", None) or (
+            perfil.centro_trabajo.empresa_id if getattr(perfil, "centro_trabajo", None) else None
+        )
+
     def get(self, request):
-        usuario = Usuario.objects.all()
-        data = usuario_serializer.ListUsuarioSerializer(usuario, many=True).data
-        return Response (data)
+        empresa_id = self.get_empresa_id_usuario(request)
+        if not empresa_id:
+            return Response([])
+
+        usuarios = Usuario.objects.filter(empresa_id=empresa_id).select_related(
+            "empresa", "centro_trabajo"
+        )
+        data = usuario_serializer.ListUsuarioSerializer(usuarios, many=True).data
+        return Response(data)
 
 ##Detail
 class DetailUsuarioApiView(APIView):

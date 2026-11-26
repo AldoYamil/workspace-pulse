@@ -214,7 +214,7 @@ export default function AdminDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <button
             type="button"
-            onClick={() => navigate('/encuestas-aplicadas')}
+            onClick={() => navigate('/admin/encuestas-aplicadas')}
             className="bg-white p-4 rounded-xl shadow-lg border border-white/10 hover:border-[#1E3A5F] hover:shadow-xl transition-all flex items-center gap-3 group text-left"
           >
             <div className="w-10 h-10 bg-blue-50 text-[#1E3A5F] rounded-lg flex items-center justify-center group-hover:bg-[#1E3A5F] group-hover:text-white transition-colors">
@@ -228,7 +228,7 @@ export default function AdminDashboard() {
 
           <button
             type="button"
-            onClick={() => navigate('/reportes-auditoria')}
+            onClick={() => navigate('/admin/reportes-auditoria')}
             className="bg-white p-4 rounded-xl shadow-lg border border-white/10 hover:border-[#1E3A5F] hover:shadow-xl transition-all flex items-center gap-3 group text-left"
           >
             <div className="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-lg flex items-center justify-center group-hover:bg-emerald-600 group-hover:text-white transition-colors">
@@ -242,12 +242,8 @@ export default function AdminDashboard() {
 
           <button
             type="button"
-            onClick={() => navigate('/panel-riesgos')}
-            className="bg-[#1E3A5F] p-4 rounded-xl shadow-lg hover:bg-[#172A47] transition-all flex items-center gap-3 text-white border border-white/10 text-left"
-            ></button>
-          <button
-            onClick={() => navigate('/admin/planes-accion')} 
-            className="bg-[#1E3A5F] p-4 rounded-xl shadow-lg hover:bg-[#172A47] transition-all flex items-center gap-3 text-white border border-white/10 cursor-pointer"
+            onClick={() => navigate('/admin/planes-accion')}
+            className="bg-[#1E3A5F] p-4 rounded-xl shadow-lg hover:bg-[#172A47] transition-all flex items-center gap-3 text-white border border-white/10 cursor-pointer text-left"
           >
             <div className="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center">
               <TrendingUp size={20} />

@@ -86,23 +86,34 @@ class UpdatePuestoApiView(generics.UpdateAPIView):
     permission_classes = [PersonalRH]
     queryset = Puesto.objects.all()
     serializer_class = puesto_serializer.UpdatePuestoSerializer
+
     def get_queryset(self):
         usuario_perfil = get_usuario_perfil(self.request.user)
-        if usuario_perfil and usuario_perfil.centro_trabajo:
-            return Puesto.objects.filter(empresa_id=usuario_perfil.area.centro_trabajo.empresa_id)
+        if usuario_perfil:
+            empresa_id = getattr(usuario_perfil, 'empresa_id', None) or (
+                usuario_perfil.centro_trabajo.empresa_id if getattr(usuario_perfil, 'centro_trabajo', None) else None
+            )
+            if empresa_id:
+                return Puesto.objects.filter(area__centro_trabajo__empresa_id=empresa_id)
         if self.request.user.is_superuser:
             return Puesto.objects.all()
         return Puesto.objects.none()
+
 
 ##DELETE
 class DeletePuestoApiView(generics.DestroyAPIView):
     permission_classes = [PersonalRH]
     queryset = Puesto.objects.all()
     serializer_class = puesto_serializer.DeletePuestoSerializer
+
     def get_queryset(self):
         usuario_perfil = get_usuario_perfil(self.request.user)
-        if usuario_perfil and usuario_perfil.centro_trabajo:
-            return Puesto.objects.filter(empresa_id=usuario_perfil.area.centro_trabajo.empresa_id)
+        if usuario_perfil:
+            empresa_id = getattr(usuario_perfil, 'empresa_id', None) or (
+                usuario_perfil.centro_trabajo.empresa_id if getattr(usuario_perfil, 'centro_trabajo', None) else None
+            )
+            if empresa_id:
+                return Puesto.objects.filter(area__centro_trabajo__empresa_id=empresa_id)
         if self.request.user.is_superuser:
             return Puesto.objects.all()
         return Puesto.objects.none()

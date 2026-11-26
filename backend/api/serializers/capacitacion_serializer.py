@@ -75,14 +75,14 @@ class CreateCapacitacionSerializer(serializers.ModelSerializer):
         return value.strip()
 
     def validate(self, attrs):
-        planeacion = attrs.get('planeacion')
-        centro_trabajo = attrs.get('centro_trabajo')
-        
-        if planeacion and centro_trabajo:
-            centro_planeacion_id = planeacion.usuario.centrotrabajo_id
-            if centro_planeacion_id != centro_trabajo.id:
+        centro_trabajo = attrs.get("centro_trabajo")
+        planeacion = attrs.get("planeacion")
+
+        if centro_trabajo and planeacion and getattr(planeacion, "usuario", None):
+            centro_origen = getattr(planeacion.usuario, "centro_trabajo", None)
+            if centro_origen and centro_trabajo.empresa_id != centro_origen.empresa_id:
                 raise serializers.ValidationError({
-                    "centro_trabajo": "El centro de trabajo no coincide con la empresa/centro asignado a la planeación de origen."
+                    "centro_trabajo": "El centro de trabajo no pertenece a la misma empresa que la planeación de origen."
                 })
 
         return attrs
@@ -165,6 +165,19 @@ class UpdateCapacitacionSerializer(serializers.ModelSerializer):
                 "El nombre del taller debe tener al menos 5 caracteres."
             )
         return value.strip() if value else value
+    
+    def validate(self, attrs):
+        centro_trabajo = attrs.get("centro_trabajo")
+        planeacion = attrs.get("planeacion")
+
+        if centro_trabajo and planeacion and getattr(planeacion, "usuario", None):
+            centro_origen = getattr(planeacion.usuario, "centro_trabajo", None)
+            if centro_origen and centro_trabajo.empresa_id != centro_origen.empresa_id:
+                raise serializers.ValidationError({
+                    "centro_trabajo": "El centro de trabajo no pertenece a la misma empresa que la planeación de origen."
+                })
+
+        return attrs
 
 
 ## DELETE

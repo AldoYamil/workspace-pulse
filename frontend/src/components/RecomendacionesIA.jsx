@@ -67,7 +67,7 @@ export default function RecomendacionesIA({ onUsar }) {
       });
       setResultado(data);
     } catch (err) {
-      console.error('Error al pedir recomendaciones:', err);
+      console.error('Detalle del 400:', error.response?.data);
       setError(describirError(err));
     } finally {
       setCargando(false);

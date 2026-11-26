@@ -88,7 +88,10 @@ class CreateUsuarioSerializer(serializers.ModelSerializer):
 ## READ
 
 ## List
+## List
 class ListUsuarioSerializer(serializers.ModelSerializer):
+    centro_trabajo = DetailCentroTrabajoSerializer(read_only=True)
+
     class Meta:
         model = Usuario
         fields = [
@@ -97,6 +100,8 @@ class ListUsuarioSerializer(serializers.ModelSerializer):
             "email",
             "rol",
             "activo",
+            "empresa",
+            "centro_trabajo",
         ]
 
 

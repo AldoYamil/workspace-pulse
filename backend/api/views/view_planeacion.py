@@ -20,12 +20,30 @@ class CreatePlaneacionApiView(generics.CreateAPIView):
 #List
 class ListPlaneacionApiView(APIView):
     permission_classes = [PersonalRH]
+
     def get(self, request):
-        usuario_logeado = request.user
-        empresa_id = usuario_logeado.centrotrabajo.empresa_id
-        planeaciones = Planeacion.objects.filter(
-            usuario__centrotrabajo__empresa_id=empresa_id
+        usuario_auth = request.user
+        perfil = (
+            Usuario.objects.select_related('centro_trabajo')
+            .filter(email__iexact=usuario_auth.email)
+            .first()
         )
+
+        if not perfil:
+            if getattr(usuario_auth, 'is_superuser', False):
+                planeaciones = Planeacion.objects.all()
+            else:
+                return Response([], status=status.HTTP_200_OK)
+        else:
+            empresa_id = getattr(perfil, 'empresa_id', None) or (
+                perfil.centro_trabajo.empresa_id if getattr(perfil, 'centro_trabajo', None) else None
+            )
+            if not empresa_id:
+                return Response([], status=status.HTTP_200_OK)
+
+            planeaciones = Planeacion.objects.filter(
+                usuario__centro_trabajo__empresa_id=empresa_id
+            )
 
         resultado_riesgo_id = request.query_params.get('resultado_riesgo_id')
         nivel_riesgo = request.query_params.get('riesgo')
@@ -34,11 +52,12 @@ class ListPlaneacionApiView(APIView):
             planeaciones = planeaciones.filter(resultado_riesgo_id=resultado_riesgo_id)
 
         if nivel_riesgo:
-            planeaciones = planeaciones.filter(resultado_riesgo__nivel__iexact=nivel_riesgo)
+            campos_riesgo = {f.name for f in ResultadoRiesgo._meta.fields}
+            campo_nivel = 'nivel_riesgo' if 'nivel_riesgo' in campos_riesgo else 'nivel'
+            planeaciones = planeaciones.filter(**{f'resultado_riesgo__{campo_nivel}__iexact': nivel_riesgo})
 
         serializer = planeacion_serializer.ListPlaneacionSerializer(planeaciones, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
-
 #Detail
 class DetailPlaneacionApiView(APIView):
     permission_classes = [PersonalRH]

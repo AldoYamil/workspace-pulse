@@ -5,6 +5,7 @@ from rest_framework import generics, status
 from django.apps import apps
 from django.db import transaction
 from rest_framework.permissions import AllowAny
+from django.contrib.auth.models import Group, User
 
 from django.contrib.auth.models import User
 
@@ -105,6 +106,15 @@ class CreateEmpresaApiView(generics.CreateAPIView):
 
                     usuario = Usuario.objects.create(**usuario_kwargs)
                     usuario_id = usuario.id
+
+                    if supabase_uid:
+                     auth_user, _ = User.objects.get_or_create(
+                         username=supabase_uid,
+                         defaults={"email": email_admin},
+                     )
+                     grupo_admin, _ = Group.objects.get_or_create(name="administrador")
+                     auth_user.groups.clear()
+                     auth_user.groups.add(grupo_admin)
 
             respuesta = serializer.data
             if usuario_id:
