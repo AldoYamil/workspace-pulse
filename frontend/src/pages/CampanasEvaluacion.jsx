@@ -56,12 +56,15 @@ export default function CampanasEvaluacion() {
     }
   }, [centros, selectedCentroId]);
 
-  const normalizeStatus = (estadoRaw = '') => {
-    const val = String(estadoRaw).toLowerCase();
-    if (val.includes('activ')) return 'active';
-    if (val.includes('program') || val.includes('pend') || val.includes('paus')) return 'scheduled';
-    return 'finished';
-  };
+  const normalizeStatus = (estadoRaw) => {
+      if (typeof estadoRaw === 'boolean') {
+        return estadoRaw ? 'active' : 'finished';
+      }
+      const val = String(estadoRaw ?? '').toLowerCase().trim();
+      if (val === 'true' || val === '1' || val.includes('activ')) return 'active';
+      if (val.includes('program') || val.includes('pend') || val.includes('paus')) return 'scheduled';
+      return 'finished';
+    };
 
   const getGuiaNombre = (guiaVal) => {
     if (guiaVal && typeof guiaVal === 'object') {
@@ -125,20 +128,25 @@ export default function CampanasEvaluacion() {
   };
 
   const handleToggleEstado = async (campaign) => {
-    const statusNorm = normalizeStatus(campaign.estado);
-    const nuevoEstado = statusNorm === 'active' ? 'Programada' : 'Activa';
-    const gId = typeof campaign.guia_referencia === 'object'
-      ? campaign.guia_referencia.id
-      : (campaign.guia_referencia || selectedGuiaId);
-    const cId = typeof campaign.centro_trabajo === 'object'
-      ? campaign.centro_trabajo.id
-      : (campaign.centro_trabajo || selectedCentroId);
+      const statusNorm = normalizeStatus(campaign.estado);
+      const nuevoEstado = statusNorm === 'active' ? 'Finalizada' : 'Activa';
+      const gId = typeof campaign.guia_referencia === 'object'
+        ? campaign.guia_referencia.id
+        : (campaign.guia_referencia || selectedGuiaId);
+      const cId = typeof campaign.centro_trabajo === 'object'
+        ? campaign.centro_trabajo.id
+        : (campaign.centro_trabajo || selectedCentroId);
 
-    const res = await updateCampana(gId, cId, { estado: nuevoEstado }, 'patch');
-    if (!res.success) {
-      alert('No se pudo actualizar el estado de la campaña: ' + JSON.stringify(res.error));
-    }
-  };
+      const res = await updateCampana(
+        gId,
+        cId,
+        { estado: nuevoEstado, campana_id: campaign.id },
+        'patch'
+      );
+      if (!res.success) {
+        alert('No se pudo actualizar el estado de la campaña: ' + JSON.stringify(res.error));
+      }
+    };
 
   // Renderizado de Badge de Estatus
   const StatusBadge = ({ status }) => {
@@ -344,15 +352,17 @@ export default function CampanasEvaluacion() {
                     >
                       Ver Detalles
                     </button>
-                    {statusNorm !== 'finished' && (
-                      <button
-                        type="button"
-                        onClick={() => handleToggleEstado(campaign)}
-                        className="flex-1 py-2 text-xs font-bold text-white bg-[#1E3A5F] rounded-lg hover:bg-[#162c4a] transition-colors"
-                      >
-                        {statusNorm === 'active' ? 'Pausar' : 'Activar'}
-                      </button>
-                    )}
+                    <button
+                      type="button"
+                      onClick={() => handleToggleEstado(campaign)}
+                      className={`flex-1 py-2 text-xs font-bold text-white rounded-lg transition-colors ${
+                        statusNorm === 'active'
+                          ? 'bg-amber-600 hover:bg-amber-700'
+                          : 'bg-emerald-600 hover:bg-emerald-700'
+                      }`}
+                    >
+                      {statusNorm === 'active' ? 'Pausar / Finalizar' : 'Activar Campaña'}
+                    </button>
                   </div>
                 </div>
               );

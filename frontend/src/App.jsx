@@ -48,11 +48,11 @@ export default function App() {
               <Route path="riesgos" element={<PanelRiesgos />} />
               <Route path="planes-accion" element={<PlanesAccion />} />
               <Route path="reportes-auditoria" element={<ReportesAuditoria />} />
-              <Route path="capacitaciones" element={<Capacitaciones />} />
               <Route path="politicas-prevencion" element={<PoliticasPrevencion />} />
 
-              {/* Solo Administrador y Gerente de RH */}
+              {/* Solo Administrador y Gerente de RH (coincide con SoloGestion en Django) */}
               <Route element={<ProtectedRoute acceso="gestion" />}>
+                <Route path="capacitaciones" element={<Capacitaciones />} />
                 <Route path="cuestionario" element={<CuestionarioActivo />} />
                 <Route path="alertas" element={<ConfiguracionAlertas />} />
                 <Route path="campanas-evaluacion" element={<CampanasEvaluacion />} />

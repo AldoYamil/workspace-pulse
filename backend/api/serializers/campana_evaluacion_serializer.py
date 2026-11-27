@@ -1,12 +1,11 @@
 from rest_framework import serializers
 from api.models.campana_evaluacion_model import Campana_evaluacion
+from api.models.respuesta_evaluacion_model import Respuesta_evaluacion
+from api.models.usuario_model import Usuario
 from .guia_referencia_serializer import DetailGuiaReferenciaSerializer
-from .centro_trabajo_serializer import DetailCentroTrabajoSerializer  
+from .centro_trabajo_serializer import DetailCentroTrabajoSerializer
 
 
-## CRUD CAMPAÑA EVALUACIÓN
-
-## CREATE
 def _normalizar_estado(validated_data):
     if "estado" in validated_data and isinstance(validated_data["estado"], str):
         validated_data["estado"] = validated_data["estado"].strip().lower() in (
@@ -18,6 +17,7 @@ def _normalizar_estado(validated_data):
             "sí",
         )
     return validated_data
+
 
 class CreateCampanaEvaluacionSerializer(serializers.ModelSerializer):
     nombre = serializers.CharField(
@@ -76,29 +76,11 @@ class CreateCampanaEvaluacionSerializer(serializers.ModelSerializer):
         return Campana_evaluacion.objects.create(**validated_data)
 
 
-## READ
-
-## List
 class ListCampanaEvaluacionSerializer(serializers.ModelSerializer):
     guia_referencia = DetailGuiaReferenciaSerializer(read_only=True)
     centro_trabajo = DetailCentroTrabajoSerializer(read_only=True)
-
-    class Meta:
-        model = Campana_evaluacion
-        fields = [
-            "id",
-            "nombre",
-            "fecha_inicio",
-            "estado",
-            "guia_referencia",
-            "centro_trabajo",
-        ]
-
-
-## Detail
-class DetailCampanaEvaluacionSerializer(serializers.ModelSerializer):
-    guia_referencia = DetailGuiaReferenciaSerializer(read_only=True)
-    centro_trabajo = DetailCentroTrabajoSerializer(read_only=True)
+    total_respuestas = serializers.SerializerMethodField()
+    total_asignados = serializers.SerializerMethodField()
 
     class Meta:
         model = Campana_evaluacion
@@ -110,10 +92,50 @@ class DetailCampanaEvaluacionSerializer(serializers.ModelSerializer):
             "estado",
             "guia_referencia",
             "centro_trabajo",
+            "total_respuestas",
+            "total_asignados",
         ]
 
+    def get_total_respuestas(self, obj):
+        return Respuesta_evaluacion.objects.filter(campana_id=obj.id).count()
 
-## UPDATE
+    def get_total_asignados(self, obj):
+        return Usuario.objects.filter(
+            centro_trabajo_id=obj.centro_trabajo_id,
+            activo=True
+        ).count()
+
+
+class DetailCampanaEvaluacionSerializer(serializers.ModelSerializer):
+    guia_referencia = DetailGuiaReferenciaSerializer(read_only=True)
+    centro_trabajo = DetailCentroTrabajoSerializer(read_only=True)
+    total_respuestas = serializers.SerializerMethodField()
+    total_asignados = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Campana_evaluacion
+        fields = [
+            "id",
+            "nombre",
+            "fecha_inicio",
+            "fecha_fin",
+            "estado",
+            "guia_referencia",
+            "centro_trabajo",
+            "total_respuestas",
+            "total_asignados",
+        ]
+
+    def get_total_respuestas(self, obj):
+        return Respuesta_evaluacion.objects.filter(campana_id=obj.id).count()
+
+    def get_total_asignados(self, obj):
+        return Usuario.objects.filter(
+            centro_trabajo_id=obj.centro_trabajo_id,
+            activo=True
+        ).count()
+
+
 class UpdateCampanaEvaluacionSerializer(serializers.ModelSerializer):
     nombre = serializers.CharField(
         required=False,
@@ -165,8 +187,11 @@ class UpdateCampanaEvaluacionSerializer(serializers.ModelSerializer):
 
         return attrs
 
+    def update(self, instance, validated_data):
+        validated_data = _normalizar_estado(validated_data)
+        return super().update(instance, validated_data)
 
-## DELETE
+
 class DeleteCampanaEvaluacionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Campana_evaluacion

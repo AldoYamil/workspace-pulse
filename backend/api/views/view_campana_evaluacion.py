@@ -4,6 +4,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import generics, status
 from accounts.permissions import SoloGestion, PersonalRH
+from rest_framework.exceptions import NotFound
 
 from django.contrib.auth.models import User
 
@@ -15,6 +16,7 @@ from api.models import Usuario, Bitacora_notificacion
 from api.services.email_service import enviar_correo
 
 ##CREATE
+##CREATE
 class CreateCampanaEvaluacionApiView(generics.CreateAPIView):
     permission_classes = [SoloGestion]
     queryset = Campana_evaluacion.objects.all()
@@ -22,7 +24,10 @@ class CreateCampanaEvaluacionApiView(generics.CreateAPIView):
 
     def perform_create(self, serializer):
         campana = serializer.save()
-        notificar_nueva_campana(campana)
+        try:
+            notificar_nueva_campana(campana)
+        except Exception as e:
+            print(f"[Aviso] Campaña '{campana.nombre}' creada, pero falló el envío de correo: {e}")
 
 ##READ
 
@@ -59,6 +64,36 @@ class UpdateCampanaEvaluacionApiView(generics.UpdateAPIView):
     permission_classes = [SoloGestion]
     queryset = Campana_evaluacion.objects.all()
     serializer_class = campana_evaluacion_serializer.UpdateCampanaEvaluacionSerializer
+
+    def get_object(self):
+        campana_id = (
+            self.request.query_params.get("campana_id")
+            or self.kwargs.get("pk")
+            or self.kwargs.get("id")
+            or self.kwargs.get("campana_id")
+        )
+        if campana_id:
+            obj = Campana_evaluacion.objects.filter(pk=campana_id).first()
+            if not obj:
+                raise NotFound("No se encontró la campaña especificada.")
+            return obj
+
+        guia_id = self.kwargs.get("guia_id")
+        centro_id = self.kwargs.get("centro_id")
+        if guia_id and centro_id:
+            obj = (
+                Campana_evaluacion.objects.filter(
+                    guia_referencia_id=guia_id,
+                    centro_trabajo_id=centro_id,
+                )
+                .order_by("-id")
+                .first()
+            )
+            if not obj:
+                raise NotFound("No se encontró una campaña para esa guía y centro de trabajo.")
+            return obj
+
+        return super().get_object()
 
 ##DELETE
 class DeleteCampanaEvaluacionApiView(generics.DestroyAPIView):

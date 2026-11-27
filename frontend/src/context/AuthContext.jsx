@@ -2,11 +2,6 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import api from '../api/axios';
 
-// Qué nivel de acceso tiene cada rol.
-// Debe coincidir con backend/accounts/permissions.py:
-//   gestion   -> SoloGestion   (Administrador y Gerente)
-//   rh        -> PersonalRH    (Administrador, Gerente y Asistente)
-//   encuestas -> CualquierRol  (todos)
 
 export const ACCESOS = {
   administrador: ['gestion', 'rh', 'encuestas'],
@@ -37,9 +32,6 @@ export function AuthProvider({ children }) {
   const [rol, setRol] = useState(null);
   const [estadoRol, setEstadoRol] = useState('idle'); // idle | cargando | listo | error
 
-  // 1) Sesión de Supabase.
-  // En el callback solo guardamos la sesión: llamar a Supabase desde ahí
-  // puede dejar la app trabada.
   useEffect(() => {
     if (!supabase) {
       setCargandoSesion(false);
@@ -66,7 +58,6 @@ export function AuthProvider({ children }) {
     };
   }, []);
 
-  // 2) Rol real, que sale de Django (grupos), no de los metadatos de Supabase.
   const userId = session?.user?.id;
 
   useEffect(() => {
